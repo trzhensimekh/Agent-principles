@@ -1,6 +1,6 @@
 # Why AGENT might fail
 
-AGENT is an experimental proposal for software maintained by coding agents. Its hypothesis is that addressable context, explicit dependencies, economical abstractions, bounded changes, and traceable verification can improve the cost and reliability of maintenance. A plausible hypothesis is not an established result. This document states the strongest objections and the observations that should make the project revise or reject its mechanisms.
+AGENT is experimental source-design guidance for coding agents. Its hypothesis is that Atomic Context, Graph Explicitness, Economic Abstraction, Narrow Change Surface, and Testable Behavior can make source easier to implement and change correctly. The choices concern semantic decisions, dependencies, useful boundaries, state ownership, and observable effects. A plausible hypothesis is not an established result. This document states the strongest objections and the observations that should make the project revise or reject its guidance.
 
 ## 1. The principles may simply rename good engineering
 
@@ -8,19 +8,19 @@ Local reasoning, information hiding, explicit interfaces, cohesion, and executab
 
 Recent prior art is close, too. The Context Minimization Principle evaluates designs through the acquisition cost of sufficient context for realistic correct modifications. Context Architecture binds repository claims to mechanisms that fail when those claims stop holding. These are substantive predecessors, not incidental references. [Context Minimization Principle](https://www.contextcost.dev/research/cmp/foundations/the-context-minimization-principle/); [Context Architecture](https://context-architecture.dev/).
 
-AGENT's defensible contribution is a proposed operational profile, executable examples, and an evaluation programme. The acronym establishes no originality. Neither object orientation nor familiar frameworks are intrinsically unsuitable for agents; well-understood interfaces can reduce uncertainty.
+AGENT's defensible contribution is a compact synthesis that tells agents how to choose source structure, accompanied by examples and an evaluation programme. The acronym establishes no originality. Neither object orientation nor familiar frameworks are intrinsically unsuitable for agents; well-understood interfaces can reduce uncertainty.
 
-**Falsifier:** Excellent conventional architecture with ordinary tooling performs as well as the proposed mechanisms across matched tasks. Retain any useful tools or checklist, but withdraw claims of a distinct architectural advantage.
+**Falsifier:** Excellent conventional architecture with ordinary tooling performs as well as AGENT-guided designs across matched tasks. Retain useful guidance, but withdraw claims of a distinct architectural advantage.
 
 ## 2. More explicit context can make agents worse
 
-A repository map consumes attention and requires upkeep. An agent may already discover the relevant facts cheaply through language tools. Instructions can add work without improving the final patch. A stale description can be more misleading than no description.
+Exposing every internal detail can make a decision harder to understand. Many tiny functions can scatter a rule across files; a giant module can mix unrelated rules. An agent may already navigate familiar conventions cheaply. Additional instructions or maps consume attention, and stale descriptions can mislead.
 
 The evidence is mixed. A September 2026 revision of an AGENTS.md evaluation reports no general improvement in task success and more than 20% higher average inference cost in its tested settings. Another study, across 10 repositories and 124 pull requests, reports lower median runtime and output-token consumption with context files. Different outcomes and experimental settings prevent a universal conclusion. Neither study evaluates the complete AGENT architecture. [Gloaguen et al., v3](https://arxiv.org/abs/2602.11988v3); [Lulla et al., v2](https://arxiv.org/abs/2601.20404v2).
 
-Addressable Context therefore makes a new manifest optional. Task views should be selective, current, and derived from authoritative artifacts where practical. Missing knowledge and insufficient implementation capability are different problems.
+Atomic Context therefore concerns coherent meaning in code and contracts. It does not require extra prose, a manifest, or a map. A boundary should expose what its caller needs while hiding stable implementation detail. Optional views should remain selective and current. Missing knowledge and insufficient implementation capability are different problems.
 
-**Falsifier:** Removing a context view preserves acceptance and lowers total cost. Delete or redesign that view; do not redefine every unsuccessful view as insufficiently “agent-native.”
+**Falsifier:** A supposedly clearer decomposition increases missed constraints or reading cost without improving correctness. Change the decomposition. If removing an optional context view preserves acceptance and lowers cost, remove it too.
 
 ## 3. The obvious metrics are easy to game
 
@@ -36,7 +36,7 @@ Imports reveal only part of a system. Relevant edges include schema compatibilit
 
 Static analysis approximates possible behavior. Runtime observations cover particular executions. Neither automatically yields a complete production graph. Even the absence of reported unknowns is ambiguous: the analyzer may lack support for an entire dependency class.
 
-Expose the analysis scope and provenance of edges. Distinguish declarations, static derivations, runtime observations, and unsupported analysis. Query relevant slices rather than inserting the entire graph into context.
+Express application-specific dependencies and effect order through inspectable calls, parameters, composition, and contracts. Where behavior depends on dynamic binding, expose the selection boundary and exercise it. If a supporting analyzer is used, state its scope and distinguish declared, derived, and observed relationships. A separate graph representation is optional.
 
 **Falsifier:** Local changes repeatedly break undeclared schema, configuration, or effect dependencies. The graph has failed its intended maintenance scope, regardless of how clean its import diagram looks.
 
@@ -50,19 +50,21 @@ Narrow Change Surface must account for changed contracts, semantic read/write de
 
 **Falsifier:** Independently accepted patches fail after integration, or routine changes require hidden synchronized edits. Revise ownership and coordination boundaries; rerun verification against the integrated candidate.
 
-## 6. Traceability can become self-certification
+## 6. Testability can become self-confirmation
 
 An agent can misunderstand a requirement, implement that misunderstanding, and write tests confirming it. A second agent may share the same error. Agreement and an impressive audit trail cannot establish that the intended behavior was delivered.
 
-The acceptance policy must be independently controlled. It identifies mandatory claims, preserved constraints, allowed residual unknowns, and promotion scope. Required claims with failed, missing, or stale evidence block promotion. An implementation agent cannot obtain acceptance by silently narrowing the task, weakening a test, or moving a required property into a limitations list.
+Testable Behavior can also be misapplied by mocking away concurrency, transactions, timing, or network effects. Passing explicit inputs helps reproduce a decision; it does not make a real adapter correct. Failure, retry, cancellation, and duplicate-delivery obligations need independently stated expectations and meaningful integration checks where relevant.
 
-Receipts identify measured artifacts and observed results within a declared environment. Hashes do not authenticate their author or establish semantic correctness. Ordinary test logs are not formal proofs. The reference fixture deliberately demonstrates local checking and reproducibility; it does not implement a secured promotion service.
+Evaluation must keep its acceptance criteria independent of the implementation agent's ability to change its own tests. That agent cannot obtain acceptance by silently narrowing the task or weakening an assertion. Selected fault injection can check whether a test detects the intended violation. It does not prove that all required behavior has been specified.
+
+Larger autonomous workflows may also use revision-bound reports or receipts, as illustrated by the optional [verification profile](VERIFICATION-PROFILE.md). Hashes establish neither trustworthy authorship nor semantic correctness. These supporting tools are not requirements of the coding principles, and the local example does not implement a secured promotion service.
 
 **Falsifier:** A candidate obtains acceptance by changing assertions, disabling discovery, replacing the grading contract, or replaying old evidence. That is a verification failure even if the candidate's own tests pass.
 
 ## 7. Present-day agent weaknesses may disappear
 
-Better retrieval, longer effective context, improved models, or different harnesses could eliminate the benefit of a custom index. Familiar frameworks may become easier to use than a specialized agent architecture. A mechanism that pays for itself with one model may become unnecessary overhead with the next.
+Better retrieval, longer effective context, improved models, or different harnesses could reduce the cost of navigating a familiar framework or deeper abstraction. A bespoke replacement chosen for one model may become unnecessary overhead with the next. Conversely, a well-designed contract can remain useful as the model changes; this also requires measurement.
 
 The proposed properties should remain interoperable with ordinary languages and tools. No fixed file-size limit, universal token budget, or mandatory directory structure follows from the principles. Reevaluate mechanisms after major changes to models and harnesses.
 
@@ -70,7 +72,9 @@ The proposed properties should remain interoperable with ordinary languages and 
 
 ## 8. A runnable example is not a productivity experiment
 
-The refund fixture can show that particular checks execute, selected violations are detected, and evidence becomes stale after input changes. It cannot show improved agent success or reduced maintenance cost. A deliberately tangled comparison implementation would not establish that either.
+The refund fixture can illustrate explicit policy, invariant ownership, transaction boundaries, and selected checks that detect violations. Its supporting verification code can demonstrate stale-evidence handling. Neither demonstration establishes improved agent success or reduced implementation and maintenance cost. A deliberately tangled comparison implementation would not establish that either.
+
+The completed [exploratory study](../experiments/README.md) compared agents writing libraries with ordinary instructions or AGENT guidance, then new agents implementing withheld changes. All four chains passed the finite acceptance suites; no acceptance-success advantage was observed. It evaluated the combined guidance and resulting code, without isolating each principle, measuring token costs, or demonstrating a controlled general advantage.
 
 A credible experiment needs strong behavior-equivalent baselines, frozen acceptance criteria, fresh sessions, randomized conditions, repeated runs, and independent grading. Separate architecture, instructions, retrieval tooling, and verifier changes. Include sequential maintenance and data/configuration tasks. Publish failures, upkeep cost, raw measurements, and uncertainty.
 
@@ -80,6 +84,6 @@ Infrastructure also affects outcomes. Anthropic reports material coding-benchmar
 
 ## What would justify confidence?
 
-Replicated gains on realistic tasks, across repositories and agent configurations, would justify bounded claims. Negative results are equally useful when they identify unnecessary metadata, unreliable checks, or ineffective structural rules. Until controlled trials exist, the performance hypothesis remains unmeasured.
+Replicated gains on realistic tasks, across repositories and agent configurations, would justify bounded claims. Negative results are equally useful when they identify needless abstractions, misleading state ownership, ineffective tests, or costly structural rules. The completed [exploratory study](../experiments/README.md) is a first investigation; a controlled general advantage remains unproven.
 
 Publicly attributable research and documentation can support specific claims. Unavailable or unverifiable leaks cannot establish effectiveness, priority, or provider endorsement. Stars measure attention and adoption, not correctness. AGENT earns technical credibility by making its claims testable and allowing the results to change the proposal.

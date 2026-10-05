@@ -1,14 +1,14 @@
 # AGENT evaluation protocol
 
-Status: proposed experiment. No agent-performance results have been collected. Structural checks and illustrative examples establish that rules can be enforced; they do not establish that agents become faster, cheaper, or more reliable.
+Status: proposed larger experiment. A separate [exploratory source-code study](../experiments/README.md) records a small set of actual agent outcomes; it does not execute this full protocol. Structural checks and illustrative examples establish that rules can be enforced; they do not establish that agents become faster, cheaper, or more reliable.
 
 ## 1. Claim and unit of evidence
 
-The falsifiable claim is: for a specified distribution of maintenance tasks, agent models, and execution budgets, changing repository architecture according to AGENT increases verified task success or reduces total cost at comparable success, while preserving externally observable behavior before the task. Benefits must survive competent baseline design, equal documentation, equal tooling, and independent hidden evaluation.
+The primary source-design claim is: for a specified distribution of implementation and maintenance tasks, agent models, and execution budgets, AGENT coding guidance produces code that agents can implement and subsequently change with greater verified success or lower total cost at comparable success. Benefits must survive competent baseline guidance, equivalent task information, equal tooling, and independent hidden evaluation. A complementary structural experiment compares behavior-equivalent architecture variants to investigate the mechanism separately from the prompting intervention. The proposed mediator is [agent legibility](../docs/LEGIBILITY.md), which needs direct diagnostic measurements as well as task outcomes.
 
 The principal experimental unit is a repository with a distribution of tasks. Repeated model runs are observations within tasks, and tasks are clustered within repositories. Hundreds of attempts on one repository do not establish generality across repositories. Architecture variants are treatments, not different products. Do not describe lower token consumption alone as improved engineering.
 
-The experiment addresses autonomous code maintenance. It does not establish human productivity, product value, universal superiority over object orientation, or transfer to every language and framework.
+Both tracks address autonomous implementation and maintenance. It does not establish human productivity, product value, universal superiority over object orientation, or transfer to every language and framework.
 
 ## 2. Register the experiment before running it
 
@@ -19,6 +19,20 @@ Register one primary hypothesis and a smallest useful effect. An example decisio
 Freeze source snapshots and keep all failures in the denominator. Infrastructure failures may be rerun only under a predefined rule applied equally to all arms. Report original and rerun records. Never remove a task because an agent discovered an inconvenient defect.
 
 ## 3. Baselines and interventions
+
+### Track A: coding guidance, then unseen maintenance
+
+Give fresh builder agents the same initial behavioral requirements and ordinary working tools. Compare ordinary engineering instructions, equally concise established-design guidance (such as contracts and SOLID where applicable), and AGENT. A separate comparison with Context Minimization Principle guidance can test whether AGENT adds value beyond its closest prior art. Freeze and publish every guidance document; avoid a weak or deliberately verbose comparator. Record the added instruction cost.
+
+Let each builder choose its implementation. Evaluate generated code with the same independent acceptance suite, then give fresh agents previously withheld change sequences. Keep maintainer instructions neutral to study the effect of generated structure. A separate factorial can apply guidance to maintenance too, but that answers a different question and must be declared in advance. Do not reveal future changes while choosing the initial architecture.
+
+Preserve unsuccessful generations and follow-ups under a registered policy; do not select only easy-to-maintain successes. The dependent generation/maintenance chain is the observation within each task family and repository specification. Repeat generations, randomize assignment/order, and cluster analysis accordingly. Inspect whether the source structures actually differ; a guidance comparison that produces the same designs may be non-discriminating.
+
+This is the main evaluation path for AGENT as coding principles. The completed [small study](../experiments/README.md) used a limited version with two conditions, two domains, and one follow-up. It did not execute the full controls, repetitions, or telemetry proposed here.
+
+### Track B: behavior-equivalent structural variants
+
+This complementary track tests particular source-design choices while separating documentation and harness changes. It evaluates a mechanism; it is not a requirement to build repository-optimization tooling.
 
 Use existing, competent software as the baseline: maintained tests, ordinary modularity, established language conventions, and working developer commands. A deliberately tangled baseline answers a trivial question. Include both a strong conventional refactoring baseline and the AGENT candidate where feasible, so ordinary cleanup is not credited to the acronym.
 
@@ -78,9 +92,9 @@ A cost-per-success ratio can be unstable with few successes. Report its componen
 
 Stop only at the registered sample or a registered sequential boundary. Budget exhaustion is a legitimate stop reason but must not be presented as a successful confirmatory study. Publish negative and mixed findings, including which principles failed and which tasks became worse.
 
-## 8. Practical pilot and longitudinal follow-up
+## 8. Example structural pilot and longitudinal follow-up
 
-Start with three repositories spanning at least two languages, six held-out tasks per repository, two independently developed agent models, four architecture/documentation arms, and two repetitions: 288 runs. Analyze each preregistered paired contrast separately; the included analyzer handles two-arm contrasts. This is a feasibility pilot, not a sample-size guarantee. With an illustrative cap of $2 per run, model spend is at most $576 before infrastructure, task construction, and indexing; actual budgets should be set from one dry run without using its task in evaluation. A smaller smoke test may validate instrumentation only. Do not report it as agent efficacy.
+For Track B, start with three repositories spanning at least two languages, six held-out tasks per repository, two independently developed agent models, four architecture/documentation arms, and two repetitions: 288 runs. Analyze each preregistered paired contrast separately; the included analyzer handles two-arm contrasts. This is a feasibility pilot, not a sample-size guarantee. With an illustrative cap of $2 per run, model spend is at most $576 before infrastructure, task construction, and indexing; actual budgets should be set from one dry run without using its task in evaluation. A smaller smoke test may validate instrumentation only. Do not report it as agent efficacy.
 
 After the pilot, estimate variance and failure rate, fix instrumentation bugs without changing hypotheses silently, and size a new confirmatory study on fresh tasks. Run the factorial extensions only if the pilot can reliably execute and grade tasks.
 
@@ -90,7 +104,7 @@ Agent-maintained architecture also needs longitudinal evidence. Run a preregiste
 
 Publish runnable variants, immutable run manifests, container recipes, task provenance, evaluator hashes, machine-readable results, analysis code, redacted tool traces, and limitations. Release hidden tests after the experiment or provide an independent evaluation channel when reuse requires secrecy. Do not expose credentials or private repository content.
 
-Use explicit evidence levels: **proposed** (argument), **executable** (rules and examples run), **pilot-tested** (limited agent experiment), **replicated** (independent held-out confirmation). AGENT currently remains a proposed architecture concept with executable demonstrations. No benchmark result or efficiency percentage is claimed.
+Use explicit evidence levels: **proposed** (argument), **executable** (rules and examples run), **pilot-tested** (limited agent experiment), **replicated** (independent held-out confirmation). AGENT remains an experimental set of source-code principles with executable demonstrations and a small exploratory agent study. No general efficiency percentage is claimed.
 
 ## Methodological sources
 

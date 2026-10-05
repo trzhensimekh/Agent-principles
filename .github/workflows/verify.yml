@@ -1,4 +1,4 @@
-name: Verify reference and research tooling
+name: Verify principles and reproducible examples
 
 on:
   push:
@@ -33,3 +33,5 @@ jobs:
         run: python tools/negative_controls.py
       - name: Check benchmark measurement tooling
         run: python -m unittest discover -s benchmarks/tests -v
+      - name: Reproduce exploratory coding results
+        run: python experiments/code-design/reproduce.py

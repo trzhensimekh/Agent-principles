@@ -1,0 +1,28 @@
+{
+  "registered_at": "2026-10-05T06:54:03.073992+00:00",
+  "purpose": "Exploratory generated-code then fresh-maintainer feasibility trial, not causal efficacy or token/cost study",
+  "conditions": {
+    "inventory_x": "ordinary",
+    "inventory_y": "guidance",
+    "pricing_x": "guidance",
+    "pricing_y": "ordinary"
+  },
+  "design": "two domains, one generation per condition/domain, then one fresh neutral maintainer per generated codebase",
+  "model": "session-inherited model; exact provider snapshot and token telemetry unavailable",
+  "guidance_applies_to": "generation only; maintainers get identical neutral task instructions",
+  "limitations": [
+    "one sample per cell",
+    "shared filesystem and tool environment, instruction-level separation only",
+    "no model family comparison",
+    "no randomization, arm letters counterbalanced across domains",
+    "task authors and design proposers overlap",
+    "acceptance evaluator authored by separate fresh agent before seeing outputs"
+  ],
+  "source_hashes": {
+    "tasks/inventory-change.md": "fabf26dcc6e61f7927bf336aeece290d3a22efa4c7ce0dba54607792c4a280db",
+    "tasks/inventory-initial.md": "dad4bb51c0ac1c03611216e958292ea595337c238202f3b6d018ccfe56ab1adb",
+    "tasks/pricing-change.md": "63a04c3f7d7dd0c1892bdc2a2261644181867816412280ee6960a4b020283fed",
+    "tasks/pricing-initial.md": "29396f6092ca7e3d35429788c9636cc355414bef6a81156947592d01c2079198",
+    "guidance.md": "2e72b2f1a126153ccab731fa0b814d247a52a178ebf52882bc518372f98f01e9"
+  }
+}

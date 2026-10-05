@@ -1,73 +1,47 @@
-# Adopting AGENT with autonomous maintainers
+# Apply AGENT while writing code
 
-Start with one recurring maintenance task. The unit of adoption is a verified change path, not an entire repository rewrite.
+Use the [compact guide](../GUIDE.md) with the task. The agent's output should be working, well-structured source code. Repository tooling is optional.
 
-## 1. Establish the existing outcome
+## 1. Identify decisions and invariants
 
-Pin a repository revision, model version, harness, environment, and a task with externally stated acceptance criteria. Save the agent's observable actions, usage, patch, test results, and failures. Do not infer unseen reasoning or missing token usage.
+List the actual domain decisions: eligibility, allocation, scheduling, state transitions, authorization, or compatibility. State what must remain true after each relevant operation. Distinguish a policy from a storage representation or transport detail.
 
-Preserve the existing behavior and verification suite while comparing structures. If the original suite is inadequate, improve it identically for both variants before attributing a benefit to architecture.
+Do not create architecture layers before identifying the decisions they would separate.
 
-## 2. Find the actual context failure
+## 2. Choose semantic owners
 
-Classify the failure before adding structure:
+Place a decision where its inputs, units, errors, and constraints can be understood together. Assign mutable state to operations that preserve its invariants. Choose functions, objects, modules, or services according to the required behavior.
 
-| Observed failure | Candidate intervention | Necessary check |
-|---|---|---|
-| Agent cannot locate the owner. | Stable task/symbol entry point. | Fresh-context locate-and-change trial. |
-| Agent finds code but misses a rule. | Put an executable contract beside its authority. | Boundary or property test plus a negative control. |
-| Agent misses a runtime binding. | Expose the composition/configuration route. | Binding and effect assertion. |
-| Agent repeats broad searches. | Small task view derived from source references. | Context-view ablation; include maintenance cost. |
-| One decision requires scattered edits. | Consolidate its ownership or expose the shared contract. | Sequential changes and downstream tests. |
-| A passing patch uses weakened tests. | Isolate the acceptance oracle. | Attempted oracle-edit rejection. |
+A module split is useful when it gives callers a stable contract. A split that adds only navigation is a cost.
 
-Model inability, ambiguous requirements, flaky environments, and broken tools are different failure classes. Architecture cannot fix all of them.
+## 3. Shape the public contract
 
-## 3. Make the smallest useful structural change
+Make meaningful inputs, outputs, errors, and effects explicit. Validate at the appropriate boundary. State retry and partial-failure behavior where it matters. Keep representation private when exposing it would make callers coordinate the invariant.
 
-Keep one authority for each fact. Generate projections from code, schemas, or build metadata where possible. Use stable symbols rather than line numbers for maintained references. Keep task context selective and resolve it on demand.
+An interface with one implementation may be justified around a complex external effect. Ten forwarding interfaces around a trivial calculation may not be.
 
-Do not create a new interface for every function, a manifest for every file, or a permanent agent role for every module. Each mechanism adds retrieval, execution, and upkeep costs. Delete mechanisms that fail their ablation.
+## 4. Implement the straightforward path
 
-## 4. Give the agent a verifiable handoff
+Write domain operations with explicit orchestration. Introduce abstractions for real repeated meaning or variation. Avoid speculative registries, plugin engines, and generic context objects unless their capabilities are required.
 
-An agent beginning a task should be able to answer, through repository artifacts:
+Use familiar libraries and frameworks when their contracts reduce the amount another agent must reconstruct.
 
-```text
-What must become true?
-What must remain true?
-Where is the responsible decision?
-Which consumers, data, and effects can be affected?
-What evidence will distinguish a correct change?
-Which facts are still unresolved?
-```
+## 5. Make behavior challengeable
 
-The exiting agent leaves the patch, concise decision/impact record, check results, and artifact identities. A subsequent agent should not need the predecessor's conversation to verify the work.
+Where useful, calculate decisions from explicit inputs and perform effects through narrow boundaries. Supply clocks and randomness when they affect behavior. Test boundaries, invalid input, state transitions, and relevant retries or conflicts.
 
-## 5. Handle real end-to-end changes
+Then test the integration semantics the pure core cannot establish. Do not replace a database atomicity test with assertions that mocks were called in a preferred order.
 
-For database, network, or asynchronous behavior, code-level tests alone are insufficient. Include the relevant subset of:
+## 6. Change the code with a fresh context
 
-- schema compatibility and data migration;
-- transaction boundaries, idempotency, retries, and ordering;
-- producer/consumer contracts and configuration-selected behavior;
-- deployment compatibility, observability, rollback, and recovery;
-- permission and resource constraints at the actual effect boundary.
+Give a new agent the task and repository, without the original author's conversation. Observe where it must reconstruct meaning, which assumptions it misses, and whether it preserves the contracts while implementing the new behavior.
 
-Record untested production effects explicitly. The reference refund example stops at a local database transaction and an outbox record; it does not demonstrate settlement at a payment provider.
+Use those observations to improve code structure. Additional documentation can help with an otherwise unavailable fact; duplicating already discoverable code is not automatically beneficial.
 
-## 6. Coordinate multiple agents
+## 7. Retain the evidence that affects design
 
-Assign tasks around decision ownership and contract boundaries. A textual merge is not evidence of semantic compatibility. Record base revisions and expected read/write boundaries; after integration, rerun checks against the combined candidate. Regenerate receipts for that candidate.
+Record reproducible failures and useful comparisons. The [exploratory experiment](../experiments/README.md) shows one way to test generation followed by a fresh-maintainer change. The [larger protocol](../benchmarks/PROTOCOL.md) is for stronger claims.
 
-Shared mutable registries and duplicated policy facts can become coordination bottlenecks. Measure conflicts, repair attempts, and duplicated context acquisition before adopting parallelism as an optimization.
+If a mechanism adds complexity without improving correctness or changeability, remove it. A design principle must survive contact with actual tasks.
 
-## 7. Keep verification independent
-
-An agent-only maintenance system can use an isolated evaluator with fixed acceptance fixtures and a protected promotion mechanism. Proposed changes to those controls need a separate validation route. This is separation of authority, not a requirement that every change wait for a human.
-
-The local demo deliberately does not implement this security boundary. Its scripts are editable by the same process that edits the application. Use its receipts as reproducibility records, not authorization to deploy.
-
-## 8. Decide using evidence
-
-Run the [benchmark protocol](../benchmarks/PROTOCOL.md) against baseline and intervention variants. Keep improvements that survive correctness checks, cost accounting, and repeated changes. Retain negative results: they identify where a structural idea fails.
+For systems that need formal agent-to-agent evidence handoff, the optional [verification profile](VERIFICATION-PROFILE.md) describes additional controls. It is not required to apply the source-code principles.

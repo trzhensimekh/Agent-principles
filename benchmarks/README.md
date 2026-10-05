@@ -1,6 +1,6 @@
 # Benchmark status and tools
 
-**No empirical AGENT performance experiment has been run.** Read [PROTOCOL.md](PROTOCOL.md) before designing one. The analyzer validates data shape and calculates descriptive paired summaries; it does not run agents, verify task acceptance, detect fabricated input, or infer statistical significance.
+**No general AGENT performance advantage has been established.** A small [generation-and-maintenance experiment](../experiments/README.md) records actual agent outcomes; it does not meet the larger protocol's confirmatory requirements. Read [PROTOCOL.md](PROTOCOL.md) before designing one. The analyzer validates data shape and calculates descriptive paired summaries; it does not run agents, verify task acceptance, detect fabricated input, or infer statistical significance.
 
 ```sh
 python benchmarks/analyze.py benchmarks/synthetic.jsonl --allow-synthetic

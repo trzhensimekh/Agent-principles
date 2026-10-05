@@ -2,7 +2,7 @@
 
 Research cutoff: **2026-10-05**. Status: critical review supporting a proposal, not empirical validation of AGENT.
 
-AGENT belongs to an existing line of work on modularity, context acquisition, executable architecture, and autonomous software maintenance. Its proposed value is a compact design vocabulary connected to executable examples and a reproducible evaluation protocol. Neither the acronym nor the collection of principles establishes a new programming paradigm.
+AGENT belongs to an existing line of work on modularity, context acquisition, contracts, and autonomous software development. Its proposed value is compact guidance for agents choosing how to express decisions, dependencies, abstractions, state ownership, and testable behavior in source code. Executable examples and experiments test that guidance. Neither the acronym nor the collection of principles establishes a new programming paradigm.
 
 Two particularly close predecessors deserve explicit credit: **Sergio Azócar’s Context Architecture** and **Lianghui Zhang’s Context Minimization Principle (CMP)**. Together they cover much of the conceptual territory: repositories whose claims can be checked, and architecture evaluated by the cost of acquiring sufficient context for correct changes.
 
@@ -12,7 +12,7 @@ Two particularly close predecessors deserve explicit credit: **Sergio Azócar’
 
 [Context Architecture](https://context-architecture.dev/) states that it was first published in June 2026; its author dates the term’s introduction to October 2025. The inspected specification covers domain-oriented structure, nearby context, explicit boundaries, discoverable capabilities, executable conventions, behavioral verification, and protection of the verification surface. It also discusses autonomous development and independent agent review.
 
-This is substantial overlap with AGENT, especially A, G, N, and T. Connecting important architectural claims to failing checks is explicitly established here. Agent-only maintenance and reviewer independence are also prior art.
+This is substantial overlap with AGENT, especially A, G, N, and the executable obligations behind T. Connecting important architectural claims to failing checks is explicitly established here. AGENT v0.3 calls T **Testable Behavior**, emphasizing how source expresses reproducible decisions and observable effects. Agent-only maintenance and reviewer independence are also prior art.
 
 The document is a design specification supported by engineering experience. It does not provide a controlled comparison demonstrating that its complete prescription improves maintenance outcomes. AGENT should credit its mechanisms and test their operational consequences rather than present them as new discoveries.
 
@@ -22,7 +22,7 @@ Lianghui Zhang, also identified as Leric Zhang, frames design around the cost of
 
 CMP directly precedes AGENT’s context-cost framing and Economic Abstraction principle. A boundary earns value when its contract lets a maintainer stop investigating implementation details. Context economics is therefore not an AGENT invention.
 
-[Locality Principles: Designing Against Omission](https://www.contextcost.dev/research/cmp/principles/locality-principles/), also updated May 19, defines modification closure: the artifacts that must be considered together for a change. Locality concerns reaching that closure from legitimate starting points. Exhaustive mappings, registries, completeness tests, and explicit contracts are concrete mechanisms. This closely overlaps Addressable Context and Narrow Change Surface; proximity alone is insufficient.
+[Locality Principles: Designing Against Omission](https://www.contextcost.dev/research/cmp/principles/locality-principles/), also updated May 19, defines modification closure: the artifacts that must be considered together for a change. Locality concerns reaching that closure from legitimate starting points. Exhaustive mappings, registries, completeness tests, and explicit contracts are concrete mechanisms. This closely overlaps Atomic Context and Narrow Change Surface; proximity alone is insufficient.
 
 [Architecture as Context Routing](https://www.contextcost.dev/research/cmp/principles/architecture-as-context-routing/), updated June 3, evaluates architectural styles against their expected modification patterns. Layers, feature slices, domain boundaries, and extension points can each help when they match the work. This supports treating AGENT as a lens across architectures rather than prescribing a universal directory tree.
 
@@ -32,12 +32,12 @@ These chapters supply a conceptual framework and examples. Whether particular tr
 
 | Existing work | Main contribution relevant to AGENT | Overlap | What AGENT must add to be useful |
 |---|---|---|---|
-| [Context Architecture](https://context-architecture.dev/) | Legible repositories with executable and protected claims | A, G, N, T | A precise operational specification and measured maintenance outcomes |
+| [Context Architecture](https://context-architecture.dev/) | Legible repositories with executable and protected claims | A, G, N, T | Concrete coding decisions and measured implementation/change outcomes |
 | [CMP](https://www.contextcost.dev/research/cmp/start/reliable-coding-agents-need-better-codebases/) | Sufficient context and modification economics | A, E, N | Reproducible measurements across realistic task families |
 | [OpenAI harness engineering](https://openai.com/index/harness-engineering/) | Agent-accessible repository knowledge, boundaries, and feedback | All five | Transferable examples and explicit limits of generalization |
 | [Anthropic context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Selective context acquisition and long-task continuity | A, E | Repository-level hypotheses separated from harness effects |
 | [Aider repository maps](https://aider.chat/docs/repomap.html) | Generated, budgeted views of source relationships | A, G | Evaluation of which representations help which changes |
-| [ArchUnit](https://www.archunit.org/userguide/html/000_Index.html), [Bazel visibility](https://bazel.build/concepts/visibility) | Executable dependency constraints | G, T | Integration into an autonomous change-and-verification workflow |
+| [ArchUnit](https://www.archunit.org/userguide/html/000_Index.html), [Bazel visibility](https://bazel.build/concepts/visibility) | Executable dependency constraints | G, supporting checks | Source-level guidance on boundaries, observable semantics, and their tradeoffs |
 | [Agent-Native](https://www.agent-native.com/docs/what-is-agent-native/) | Shared application capabilities for agents and interfaces | Related operational interfaces | Clear separation between operating software and maintaining its source |
 
 ## Primary engineering evidence
@@ -56,7 +56,7 @@ This provides practical evidence that the approach is implementable. It does not
 
 [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), November 26, 2025, documents continuity failures and premature completion claims. Progress artifacts, incremental work, reproducible setup, and browser verification helped in a web-application setting. A status record alone remains an assertion about completion.
 
-[Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps), March 24, 2026, provides a critical qualification: model improvements made some earlier scaffolding unnecessary. Context resets and later sprint decomposition could be removed; evaluator value depended on task difficulty. AGENT should therefore require testing whether each imposed artifact or process earns its cost.
+[Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps), March 24, 2026, provides a critical qualification: model improvements made some earlier scaffolding unnecessary. Context resets and later sprint decomposition could be removed; evaluator value depended on task difficulty. The analogous design hypothesis is that a source abstraction should earn its cost with the agents and tasks actually using it; this transfer from harness design needs testing.
 
 ### Cursor and Aider: navigation is an independent variable
 
@@ -82,13 +82,13 @@ AGENT does not require abandoning object-oriented, functional, domain-driven, or
 
 Builder.io’s [Agent-Native documentation](https://www.agent-native.com/docs/what-is-agent-native/), inspected October 5, 2026, describes applications whose agents and interfaces share actions, data, and state. Its central concern is making product capabilities available through multiple interaction surfaces.
 
-AGENT’s primary subject is the source repository changed by a coding agent. An ordinary application can benefit from AGENT without containing an AI feature. Conversely, exposing application tools does not automatically make its implementation easy for another agent to maintain. The two concerns can share typed contracts and inspectable effects without being identical.
+AGENT’s primary subject is source code written and changed by coding agents. An ordinary application can apply AGENT without containing an AI feature. Conversely, exposing application tools does not automatically make its implementation easy for another agent to understand. The two concerns can share typed contracts and inspectable effects without being identical.
 
 ## Defensible positioning and research boundary
 
-**AGENT is a proposed operational synthesis: five principles, executable examples, and an evaluation program for reliable autonomous change.** Its credibility depends on useful implementation, transparent attribution, and published results, including failures.
+**AGENT is an experimental synthesis of five software-design principles for AI coding agents.** Its subject is the code's structure and observable behavior. Its credibility depends on useful coding guidance, transparent attribution, and published results, including failures. Manifests, maps, and receipts are optional supporting mechanisms described separately in the [verification profile](VERIFICATION-PROFILE.md); they are not prerequisites for applying the principles.
 
-The architectural hypothesis is that selected transformations can reduce the total cost of successful changes while preserving independent correctness checks. Testing it requires equivalent behavior, realistic unseen tasks, a competent conventional baseline, repeated trials, and fixed or explicitly varied models and harnesses. Navigation effort, implementation effort, verification, failures, and infrastructure cost must be distinguished. Lower token use on unsuccessful tasks is not evidence of better architecture.
+The architectural hypothesis is that these coding decisions can reduce reconstruction during implementation and future changes while preserving independently checked behavior. Testing it requires equivalent requirements, realistic unseen changes, a competent conventional baseline, repeated trials, and fixed or explicitly varied models and harnesses. Navigation, implementation, verification, failures, and infrastructure cost must be distinguished. Lower token use on unsuccessful tasks is not evidence of better architecture. The completed [exploratory study](../experiments/README.md) found no acceptance-success difference across its four chains. It did not measure token costs, and a controlled general advantage remains unproven.
 
 Neither this review nor a passing demonstration establishes universal superiority, complete verification, an optimal layout, or a guaranteed reduction in tokens. Claims of being the first architecture for agents, replacing SOLID, or inventing context-cost analysis would exceed the evidence.
 

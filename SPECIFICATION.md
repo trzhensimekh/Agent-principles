@@ -1,199 +1,215 @@
-# AGENT v0.2 — The agent change contract
+# AGENT — principles for agent-written code
 
-Status: experimental specification · Evidence reviewed: 2026-10-05
+Version 0.3 · Experimental · 2026-10-05
 
-AGENT specifies properties of software maintained by coding agents. Its unit of analysis is a **verified change**, including discovery, implementation, regression checking, and evidence handoff. It applies to ordinary software; that software does not itself have to contain an LLM.
+AGENT tells a coding agent how to choose and express software structure. Its subject is the source code being written: decisions, dependencies, abstractions, state, and observable behavior. Its intended maintainer is a fresh agent that must work without the original author's conversation or unstated assumptions.
 
-The intended maintainer can be an autonomous agent with no conversation history and no access to the original author. The architecture must expose the information and feedback necessary for that agent to work. Agent-only maintenance still requires externally supplied objectives and a verification authority: an agent cannot establish that its own interpretation is the intended behavior merely by generating matching tests.
+The objective is to make correct implementation and future changes require less reconstruction. This is a design hypothesis with [supporting research](RESEARCH.md) and [experiments](experiments/README.md); no universal improvement follows from applying five labels.
 
-## 1. Scope and terminology
+The property being investigated is **agent legibility**: whether a fresh coding agent can recover enough correct meaning from a system to locate, explain, change, and verify its behavior under stated constraints. Legibility is the goal; these principles are proposed causes, not its definition or a validated scoring system. The [operational model](docs/LEGIBILITY.md) separates locating evidence, recovering semantics, predicting effects, and checking outcomes. Passing a task alone does not show which of these improved.
 
-**Task**: a requested change with observable acceptance criteria and preserved constraints.
+The principles do not prescribe an application framework, a language, a directory tree, a graph database, a context manifest, or a verification service. Existing tools can help measure the result. The properties must live in the code and its contracts.
 
-**Task context**: the artifacts an agent uses to perform a task: code, contracts, schemas, configuration, fixtures, relevant decisions, and tool feedback. A context manifest describes a candidate context, not a proof that nothing else matters.
+The design unit is a semantic responsibility: a decision, invariant, algorithm, or protocol. Improving reconstructability must preserve the system's security, compatibility, latency, resource, and availability requirements.
 
-**Owner**: a code boundary responsible for a decision or invariant. Ownership is a structural fact; it need not refer to a person.
+## The five rules
 
-**Effect**: an externally observable operation, such as a persisted write, network request, emitted event, permission decision, or filesystem change. Imports alone do not describe effects.
-
-**Change surface**: the implementation, contracts, data, configuration, and deployment artifacts that must change together for a task. Count generated artifacts separately, but do not hide their operational cost.
-
-**Oracle**: an acceptance mechanism that distinguishes acceptable from unacceptable outcomes within a stated scope. Examples include an independently specified contract suite, a schema compatibility check, or a property with a sound proof. An LLM's approval is a fallible signal, not an oracle of correctness.
-
-**Verification receipt**: a machine-readable record binding executed checks and their outcomes to the artifacts and environment that were checked. A hash establishes identity; it does not make a check correct or a receipt authentic.
-
-**Unknown edge**: a dependency or effect that available analysis cannot resolve. Unknown must remain an explicit result rather than being silently treated as absent.
-
-MUST and SHOULD below define this experimental profile. They do not claim universal software-design laws or an external standards body's endorsement.
-
-## 2. Optimization target
-
-For a repository design `D`, task distribution `T`, agent/model `M`, harness `H`, and resource budget `B`, measure:
-
-```text
-P(accepted change | D, T, M, H, B)
-
-aggregate cost per accepted change =
-    cost of all assigned runs, including failed runs and retries
-    / number of accepted changes
-```
-
-If no change is accepted, the second quantity is undefined; report failures and total cost. It is not zero.
-
-For repeated trials, the denominator counts accepted run episodes, not unique tasks. Report unique-task coverage separately and keep failed attempts within their assigned episode. Publish both per-repository results and the chosen aggregate weighting so a large easy repository cannot silently dominate the result.
-
-Acceptance includes the requested behavior, preserved regressions, relevant boundary/effect constraints, and the declared evidence requirements. Choose task-specific performance and reliability constraints before the experiment. Report correctness and cost separately; use a Pareto comparison instead of inventing one universal architecture score.
-
-An independently controlled **acceptance profile** MUST define required claims, the execution/deployment scope, allowed residual unknowns, and conditions that block promotion before evaluating a candidate. A required claim that fails, remains unverified, or has stale evidence blocks acceptance. An implementation agent cannot convert that claim into a reported limitation to pass. Repository-only acceptance does not imply deployment acceptance: migrations, rollout, and recovery enter the profile when the task affects them.
-
-Cost includes model usage, tool execution, retrieval/indexing, verification, and amortized maintenance of additional artifacts. Record input, output, cached, and reasoning tokens separately when observable. Bytes, lines, file counts, and estimated tokens are different measurements. Missing provider usage must be reported as missing.
-
-AGENT's hypothesis is that the following properties can improve this frontier on some realistic task distributions. **This repository has not yet demonstrated that hypothesis in a controlled agent trial.**
-
-## 3. The five principles
-
-| Principle | Required outcome | Typical mechanism | Falsifying observation |
+| | Principle | Design object | Core rule |
 |---|---|---|---|
-| **A — Addressable Context** | An unfamiliar agent can locate task-relevant authorities and resolve their versions. | Stable symbols, task entry points, small validated context views. | Needed constraints repeatedly remain undiscovered; the index costs more than it saves. |
-| **G — Graph Explicitness** | Relevant dependency, data, configuration, and effect paths can be followed. | Explicit composition, schema references, declared unresolved edges. | A supposedly bounded change breaks an undisclosed consumer or effect. |
-| **E — Economic Abstraction** | A contract reduces total change cost while preserving correctness. | Stable interfaces, direct implementations where useful, measured ablations. | Users must inspect internals anyway, or lifecycle cost rises without an acceptance benefit. |
-| **N — Narrow Change Surface** | A decision has an identifiable owner; necessary changes remain bounded by actual coupling. | Cohesive policy ownership, compatibility boundaries, separate generated artifacts. | Routine tasks require synchronized edits across unrelated owners or omit required migrations. |
-| **T — Traceable Verification** | Evidence connects the task and changed artifacts to relevant checks at the tested revision. | Contract tests, architecture checks, effect assertions, version-bound receipts. | A known violation passes, evidence is stale, or the implementer can silently weaken the acceptance gate. |
+| **A** | Atomic Context | The meaning that must be recovered | Keep a semantic decision coherent and locally understandable. |
+| **G** | Graph Explicitness | Dependencies and execution paths | Expose how inputs become decisions and effects. |
+| **E** | Economic Abstraction | The usefulness of a boundary | Hide more reasoning than the abstraction adds. |
+| **N** | Narrow Change Surface | State, invariants, and impact | Assign owners that contain expected change and preserve invariants. |
+| **T** | Testable Behavior | Observable semantics | Make important outcomes and failure obligations executable. |
 
-### A — Addressable Context
+These concerns overlap, just as other design principles do. A addresses what must be read; G addresses the relationships that must be followed; E judges whether a boundary earns its cost; N controls what must change together; T supplies a way to challenge an implementation.
 
-**Rule:** For a declared task family, the repository MUST provide a discoverable route to the owning implementation, relevant contracts, and verification commands. Machine references MUST resolve or fail explicitly.
+E also governs tradeoffs among the other principles; these are not five independent measurement axes.
 
-The route may be ordinary language tooling, a module interface, a build graph, an existing schema registry, or a generated task view. A new manifest is optional. Duplicating information already cheaply discoverable is a cost that needs justification.
+## A — Atomic Context
 
-The selected view SHOULD contain:
+**Keep the inputs, policy, invariants, and failure semantics of one decision understandable together.**
 
-- the decision being changed and the authoritative code or specification;
-- entry points, relevant inputs, units, states, and boundary conditions;
-- required preserved properties and their checks;
-- cross-boundary dependencies, effects, and unresolved questions;
-- the revision or content identity of referenced artifacts.
+When writing a rule, give it a domain name and an authoritative home. Place the relevant units, valid states, boundary conditions, and error behavior in that unit or its explicit contract. Let callers rely on a boundary instead of rediscovering its internals.
 
-**Check:** Resolve references and run a fresh-context maintenance task. Record navigation effort, missed constraints, repeated retrieval, and task success. Remove or vary the context view to test whether it helps.
+An atomic context is a cohesive unit of meaning. It need not be one function, class, or file, and it has no fixed token limit. Different decisions can belong in the same module when they share an invariant; one large workflow can contain several independent decisions.
 
-**Negative control:** Delete or rename a referenced symbol without updating its locator. The reference validator must fail. This verifies addressability, not semantic sufficiency.
+### Apply it in code
 
-**Tradeoff:** A short context can omit critical facts. A large context can bury them. There is no universal maximum file size or token count. A bounded context is task-relative and can expand when the initial boundary is wrong.
+- Express a refund's eligibility in one policy rather than distributing it across a route, serializer, and job.
+- Name amounts and durations with their units. Make representation assumptions explicit.
+- Keep rejection rules as visible as the happy path.
+- Split an operation only when the extracted concept gives the reader a useful contract, not merely a shorter file.
 
-### G — Graph Explicitness
+```python
+# Understanding a rule requires reconstructing hidden defaults and dispatch.
+def eligible(order):
+    return registry.policy(order.kind).allows(order, settings.current())
 
-**Rule:** For important task paths, the repository MUST expose how declared interfaces connect to implementations and effects. Analysis MUST distinguish known edges from unresolved dynamic behavior.
-
-Relevant graph relations include:
-
-```text
-task -> changes -> decision owner
-entry point -> calls -> implementation
-implementation -> reads/writes -> schema or state
-configuration -> selects -> implementation
-implementation -> emits/consumes -> event
-effect -> observed by -> check or runtime signal
-invariant -> enforced by -> check
+# The owner makes the decision and its boundary visible.
+def refund_eligible(state, paid_at_utc, now_utc, window):
+    elapsed = now_utc - paid_at_utc
+    return state in {"paid", "shipped"} and timedelta(0) <= elapsed < window
 ```
 
-A graph does not require a graph database. Imports, typed contracts, build metadata, explicit composition, manifests, and runtime traces can supply different parts of it. Prefer deriving edges from authoritative artifacts over maintaining a duplicate hand-written map.
+This sketch assumes validated UTC timestamps and imports `timedelta` from `datetime`. A production boundary must establish those assumptions. Naming them is not validation.
 
-Evidence MUST distinguish declared, statically derived, and observed edges, with their source and revision. Unknown means unresolved under the stated analysis; it is different from an edge proven absent within a supported subset.
+**Ask before extracting:** what meaningful fact can the caller stop knowing?
 
-**Check:** Trace representative paths through their data and side effects; reconcile declared edges with static analysis and controlled runtime observations. Record analysis coverage, dynamic gaps, and observed undeclared effects. A successful trace covers that execution, not every possible execution.
+**Failure mode:** many tiny wrappers make the decision harder to reconstruct. The opposite failure is combining unrelated policies into one enormous unit. Duplicate neither shared authoritative facts nor independently changing business rules merely to satisfy a file-layout preference.
 
-**Negative control:** Add a forbidden dependency or a known undeclared effect. The corresponding check must fail. Import checks do not substitute for effect checks.
+**Experiment:** give a fresh agent a policy change. Observe missed constraints, necessary reading, and correctness. Small files alone do not count as success.
 
-**Tradeoff:** Complete static dependency discovery is generally unavailable in dynamic systems. For an unresolved edge, broaden verification, inspect the binding, or stop autonomous promotion for that scope. Do not infer safety from the absence of a discovered edge.
+## G — Graph Explicitness
 
-### E — Economic Abstraction
+**Make dependencies, execution order, and relevant effect paths recoverable from ordinary source.**
 
-**Rule:** An abstraction SHOULD permit callers to reason from its contract for common tasks. Retain, add, split, or remove it according to measured change cost and correctness, including its verification and metadata costs.
+Pass dependencies through parameters or constructors. Compose implementations in a visible place. Express orchestration through named operations. Use language and framework mechanisms that expose application-specific bindings instead of relying on unstated conventions.
 
-The relevant comparison is between feasible designs under equivalent tasks. Fewer classes, fewer interfaces, or less code is not the objective. A dependency-injection container may be useful if its bindings are cheaply inspectable; a direct function may be cheaper when variation is unnecessary.
+The graph exists in the calls, imports, types, schemas, and wiring. A separate diagram can help, but it cannot compensate for code whose actual behavior contradicts it.
 
-**Check:** Compare task outcomes with and without the abstraction. Record how often callers inspect internals, the context retrieved, repair attempts, verification cost, and maintenance of the abstraction itself.
+### Apply it in code
 
-**Negative control:** Hide an unstable or underspecified behavior behind an interface. If callers cannot complete representative tasks from the contract, that abstraction has not established a useful reasoning boundary.
+```java
+// A hidden dependency must be discovered at runtime.
+Receipt pay(Order order) {
+    return Services.resolve("payments").charge(order);
+}
 
-**Tradeoff:** Duplication can reduce immediate navigation while increasing future drift. Centralization can narrow policy changes while creating a dependency bottleneck. Measure a sequence of changes, not only the first edit.
+// The dependency is part of the object's contract.
+final class Checkout {
+    private final PaymentGateway payments;
 
-### N — Narrow Change Surface
+    Checkout(PaymentGateway payments) {
+        this.payments = payments;
+    }
 
-**Rule:** A business or technical decision SHOULD have a clear owner. Before a change, the agent SHOULD identify an expected impact scope; after the change, it MUST account for material edits and required effects outside that scope.
-
-The expected scope is a prediction, not a permission to omit work. A schema migration, consumer update, compatibility shim, deployment setting, and rollback plan may all be necessary for a small code edit.
-
-**Check:** Compare expected and actual changed owners and contract dependents. Check behavior at downstream boundaries. For parallel agents, track overlapping writes and read/write assumption conflicts even when text merges cleanly.
-
-**Negative control:** Duplicate a policy in a consumer and change only the declared owner. A cross-boundary behavioral test must expose the inconsistency.
-
-**Tradeoff:** Do not optimize raw file count. Splitting or merging files can game that number without improving change locality. Cross-cutting tasks are a required test stratum, not outliers to exclude.
-
-### T — Traceable Verification
-
-**Rule:** Each important acceptance claim MUST identify an executable check or explicitly state that it is unverified. Evidence MUST identify the tested inputs, the check definitions, the observed results, and the execution scope.
-
-The minimum trace is:
-
-```text
-requested behavior
-    -> decision and declared impact
-    -> changed artifacts
-    -> affected effects/contracts
-    -> executable checks
-    -> results bound to artifact identity
+    Receipt pay(Order order) {
+        return payments.charge(order);
+    }
+}
 ```
 
-A receipt SHOULD include task ID, base revision, candidate content digest, check-set digest, tool/runtime versions, commands and exit status, evidence artifact digests, and unresolved limitations. Record dirty working-tree state; a Git commit identifier alone does not identify uncommitted inputs.
+Also make meaningful effect order visible. A `save()` that silently sends email through a hook creates an obligation the caller must discover. A named operation that records a transaction and an outbox event makes that obligation easier to inspect. Its storage contract must still guarantee the required atomicity.
 
-**Check:** Deliberately violate an important rule and verify rejection for the intended reason. Change a source or check after generating a receipt and verify that the old receipt is rejected for the new candidate.
+**Ask before hiding a call:** how will the next agent discover that this operation reads state, selects an implementation, or causes an effect?
 
-**Authority separation:** An implementation agent can propose tests and verifier changes. A promotion gate MUST evaluate them through an independently controlled acceptance path. The same agent must not obtain acceptance merely by editing the assertion, manifest, or workflow that rejects its patch. Independent authority can be an isolated automated evaluator; it does not require a human reviewer on every change.
+**Failure mode:** explicit-looking code can still lie about actual behavior. Static imports omit dynamic dispatch, configuration, events, and external consumers. Dynamic systems remain valid; expose the selection or registration boundary and state what cannot be resolved statically.
 
-**Tradeoff:** Tests establish their encoded properties for the exercised scope. Mutation checks demonstrate selected detector sensitivity. Hashes identify bytes. None proves complete requirements, production safety, or general architectural quality.
+**Tradeoff:** familiar framework conventions can be cheaper than custom wiring. Do not flatten every library into application code. Expose the decisions that are specific to this system.
 
-## 4. An agent's change loop
+**Experiment:** ask a fresh agent to trace an operation and predict the effects of a change. Compare with execution and relevant consumer checks.
 
-1. **Locate:** identify the task, its acceptance criteria, decision owner, and candidate context.
-2. **Resolve:** follow relevant code, data, configuration, and effect edges; record unknowns.
-3. **Predict:** declare expected impact, preserved constraints, verification plan, and material alternatives.
-4. **Change:** implement within that scope; revise the prediction when evidence expands it.
-5. **Verify:** execute behavioral, boundary, effect, and relevant regression checks at the candidate revision.
-6. **Challenge:** test selected negative controls and check for weakened or stale acceptance mechanisms.
-7. **Record:** emit evidence and unresolved limitations; independently gate promotion.
-8. **Learn:** compare predicted and actual navigation/change cost. Remove ineffective metadata and fix recurring undiscoverable dependencies.
+## E — Economic Abstraction
 
-Persist concise decisions and evidence, not private chain-of-thought or full conversation transcripts. A useful record says what changed, which constraints mattered, what evidence supports it, and what remains unknown.
+**Introduce an abstraction when its contract removes more understanding and coordination work than its indirection creates.**
 
-## 5. Conformance and evidence levels
+A useful abstraction lets a caller ignore stable complexity. It may hide a large implementation behind a small trustworthy interface. An expensive abstraction adds concepts, configuration, navigation, or implicit state without allowing the caller to stop reading.
 
-Avoid a single "AGENT-compliant" badge. State exactly what has been demonstrated:
+This is neither a ban on abstraction nor a rule to minimize classes. Reuse, isolation from vendor APIs, stable contracts, and genuinely repeated variation can justify a boundary even with only one implementation.
 
-| Level | Meaning | What it does not establish |
-|---|---|---|
-| Declared | Task routes, owners, effects, and acceptance claims are documented. | That declarations match code. |
-| Structurally checked | Specified references/boundaries resolve and pass executable checks. | Semantic completeness or agent usability. |
-| Behaviorally checked | Declared scenarios and negative controls pass against identified inputs. | Better agent performance or production coverage. |
-| Experimentally evaluated | Controlled agent trials report correctness and full costs against baselines. | Transfer to every model, harness, repository, or future task. |
+### Apply it in code
 
-The reference example targets the middle two levels for a deliberately small scope. It is not a general conformance certifier or an independently secured promotion service.
+```python
+# Several concepts must be reconstructed for one domain operation.
+result = engine.execute("refund", Context(order=order, mode="full"))
 
-## 6. Failure conditions for the proposal
+# The operation's intent and dependencies are directly available.
+result = request_full_refund(order_id, request_id, now, ledger)
+```
 
-Revise or reject a mechanism when controlled trials show:
+Use a generic engine when its actual variation makes it worthwhile. Do not build it solely because future use cases might exist. Conversely, extracting a reusable integer-allocation algorithm may remove repeated reasoning even when the surrounding workflows differ.
 
-- context views add cost without improving acceptance or navigation;
-- graph upkeep and staleness outweigh discovery savings;
-- apparent local improvements disappear on cross-cutting or sequential tasks;
-- the benefit comes entirely from the harness or tests, with no architecture effect;
-- better agents remove the benefit, leaving only maintenance overhead;
-- optimization lowers token use while increasing missed regressions or operational failures.
+Do not conflate similar syntax with shared policy. Two identical predicates can encode decisions that will change independently. Merging them can increase future coupling.
 
-These outcomes are valid results. The mnemonic must not be protected from evidence.
+**Ask before adding a layer:** which details can its users reliably stop knowing, and which new concepts must they learn?
 
-## 7. Relationship to v0.1
+**Failure mode:** deleting a useful interface can spread storage representation into every caller. Excessive deduplication can replace clear domain decisions with a configuration language harder than the original code.
 
-The first proposal used **Atomic Context** and **Testable Architecture**. v0.2 uses **Addressable Context** to avoid implying one naturally complete atomic unit, and **Traceable Verification** to include the end-to-end evidence requirement. Graph Explicitness, Economic Abstraction, and Narrow Change Surface remain, with sharper checks and limitations.
+**Experiment:** compare actual implementation and follow-up tasks. Count correctness first, then navigation, retries, coupling, and upkeep. No static linter can prove that an abstraction pays for itself across unknown future tasks.
 
-AGENT builds on information hiding, contracts, dependency management, architectural fitness functions, Context Architecture, and the Context Minimization Principle. Its contribution here is an operational profile, a small executable example, and a falsifiable evaluation program. See [research](RESEARCH.md) and [prior art](docs/PRIOR-ART.md).
+## N — Narrow Change Surface
+
+**Give each important invariant and mutable resource a clear owner; place expected variation behind that boundary.**
+
+Expose operations that preserve state rules. Keep representation private. Make related updates occur under the consistency contract that actually covers them. Callers should request a semantic transition rather than coordinate low-level writes themselves.
+
+```python
+# The caller owns neither the state nor the concurrency rule.
+available = inventory.read_available(sku)
+if available >= quantity:
+    inventory.write_available(sku, available - quantity)
+
+# The inventory boundary owns validation and reservation semantics.
+reservation = inventory.reserve(request_id, sku, quantity)
+```
+
+In a concurrent system, `reserve` must enforce the invariant atomically. In a distributed system, it must specify the relevant consistency, idempotency, and conflict behavior. A name cannot create those guarantees.
+
+### Apply it in code
+
+- Return immutable values or defensive snapshots rather than unrestricted aliases to internal mutable state.
+- Place state transitions and their validation under the same semantic owner.
+- Keep database encoding and protocol representation behind boundaries when callers need domain meaning.
+- Give a shared business decision one authority, while allowing legitimately different policies to vary separately.
+- For a schema or event change, include the consumers and migration that actually share the contract.
+
+One authority does not mean one occurrence of every check. Separate trust boundaries can require repeated validation. Independent acceptance tests should derive expected behavior from the requirement, not reuse the production helper or policy constant being checked; otherwise one wrong value can make implementation and oracle agree.
+
+**Ask before exposing a field:** which invariants could another caller violate by changing it directly?
+
+**Failure mode:** one global service owning everything becomes a bottleneck. Choose owners around invariants, not arbitrary file boundaries or the whole product. Distributed multiple-writer designs require explicit merge and conflict rules; they are not forbidden.
+
+**Tradeoff:** a narrow textual diff can have global semantic impact. Do not minimize the number of files at the expense of a required consumer update or migration.
+
+**Experiment:** change a policy, representation, or retry path and check every affected contract. Parallel agents can conflict through assumptions even when their edited files differ.
+
+## T — Testable Behavior
+
+**Express important behavior through explicit inputs, outcomes, state transitions, and effect obligations that can be exercised.**
+
+Prefer deterministic policy over explicit data where practical. Supply time, randomness, configuration, and effect dependencies at meaningful boundaries. Preserve integration tests for the real behavior hidden by those boundaries.
+
+```python
+# Time is hidden inside the rule.
+def expired(reservation):
+    return time.monotonic() >= reservation.expires_at
+
+# An exact boundary can be tested without waiting.
+def expired(reservation, now):
+    return now >= reservation.expires_at
+```
+
+A storage or network operation cannot become deterministic by ignoring its environment. Specify allowed outcomes and make the relevant failures observable. Test the actual adapter when its semantics matter.
+
+### Apply it in code
+
+- Keep calculation separable from unrelated persistence when that creates a useful boundary.
+- Represent failures with clear domain exceptions or result variants; do not overload an ambiguous boolean.
+- Define retry, timeout, cancellation, duplicate delivery, and ordering behavior where relevant.
+- State which operations are atomic, which may be repeated, and which require recovery or compensation.
+- Assert observable outcomes and invariants rather than a fragile sequence of private method calls.
+
+**Ask while implementing:** what small execution would refute my understanding of this rule?
+
+**Failure mode:** mocks can erase the integration behavior that needs testing. Generating tests from an incorrect implementation can merely restate the same mistake. Use independently stated requirements, boundary cases, and meaningful negative controls.
+
+**Tradeoff:** do not introduce an interface for every pure function. Use the lightest mechanism that makes the obligation executable. Asynchronous systems need tests for permitted outcomes, not a false promise of exactly-once delivery or a single deterministic schedule.
+
+**Experiment:** test initial behavior and previously withheld changes, then inject selected faults. A passing test suite establishes its checked scope, not the completeness of the requirements.
+
+## Resolve conflicts between principles
+
+A cohesive unit can become too large; an extraction can increase navigation. An explicit dependency can expose unnecessary details; a useful abstraction can hide unstable behavior. Local state ownership can simplify reasoning while making a distributed workflow require coordination.
+
+Resolve those tensions around the actual invariant and expected change. Prefer a contract that permits local reasoning over either extreme: one large function that exposes everything, or many small abstractions that hide nothing useful. When evidence contradicts the expected benefit, change the design rather than defending the acronym.
+
+No principle mandates a fixed file size, language paradigm, inheritance depth, class count, or token budget. A familiar library with a good contract can be cheaper for an agent than a bespoke implementation.
+
+## Relationship to SOLID and earlier AGENT versions
+
+SOLID supplies useful rules about responsibilities, extensibility, substitution, interface scope, and dependency direction. AGENT emphasizes the code a bounded-context autonomous maintainer must reconstruct and modify. The foundations overlap; the proposed contribution is the combined coding guidance and its evaluation against agent work.
+
+The v0.1 names were Atomic Context and Testable Architecture. v0.2 explored Addressable Context and Traceable Verification, along with a verification profile. v0.3 restores **Atomic Context** as a semantic code-design property and uses **Testable Behavior** to focus on the implementation's observable semantics. Addressability, graphs, and receipts remain possible supporting mechanisms. The [v0.2 verification profile](docs/VERIFICATION-PROFILE.md) is preserved separately.
+
+Read the [coding guide](GUIDE.md), [design decisions](docs/DESIGN-DECISIONS.md), [research](RESEARCH.md), [prior art](docs/PRIOR-ART.md), and [experiments](experiments/README.md). Use the [larger evaluation protocol](benchmarks/PROTOCOL.md) for claims beyond the exploratory study.

@@ -52,4 +52,4 @@ The [CI workflow](../.github/workflows/verify.yml) runs the reference and measur
 
 ## Not measured
 
-No controlled agent-maintenance trial, token-saving result, cross-model improvement, or production-payment guarantee is reported. The benchmark tooling validates records and calculates descriptive measurements; synthetic fixtures test that tooling only. The next evidence step is to preregister and execute the [proposed comparison protocol](../benchmarks/PROTOCOL.md).
+These reference checks report no token-saving result, cross-model improvement, or production-payment guarantee. A separate [exploratory coding and maintenance study](../experiments/README.md) has since exercised four agent chains; all passed their finite acceptance suites and no acceptance advantage was observed. It is not a general efficacy trial. The benchmark tooling validates records and calculates descriptive measurements; synthetic fixtures test that tooling only. Stronger claims require the [proposed comparison protocol](../benchmarks/PROTOCOL.md).

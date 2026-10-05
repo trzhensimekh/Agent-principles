@@ -1,42 +1,39 @@
-# Research roadmap
+# Research and development roadmap
 
-The project advances by evidence, not by declaring a new programming paradigm.
+The product is a useful set of code-design principles for autonomous coding agents. Tools and experiments serve that goal.
 
-## v0.2: make the proposal inspectable
+The target property is [agent legibility](LEGIBILITY.md). Measure how accurately and efficiently a fresh agent locates behavior, reconstructs semantics, predicts impact, and verifies an outcome. Task success is necessary evidence of useful work but does not by itself measure legibility.
 
-- Define task-relative principles and their failure conditions.
-- Credit close prior art and classify evidence strength.
-- Provide an executable, dependency-free reference with negative controls.
-- Publish a controlled evaluation protocol and result-validation tooling.
-- Keep agent-performance claims explicitly unmeasured.
+## Current: make the guidance concrete
 
-## Next: a reproducible pilot
+- Express each principle as a choice an agent makes while writing code.
+- Include state ownership, explicit effects, contracts, failure semantics, and tradeoffs.
+- Provide a compact generation guide without a required framework or repository layout.
+- Compare actual agent-generated code and subsequent changes, preserving unsuccessful results.
 
-1. Freeze the protocol, outcome definitions, cost accounting, and exclusions before collecting results.
-2. Build behavior-equivalent baseline/intervention repository pairs; do not sabotage the baseline.
-3. Include local policy changes, dynamic binding changes, cross-cutting schema/effect changes, and sequential maintenance.
-4. Hold model, harness, tool access, budget, tests, and task wording fixed within each comparison.
-5. Test architecture, context views, and verifier changes separately and together.
-6. Release task specifications, environment definitions, traces permitted by provider terms, raw usage, patches, and negative results.
+The first [exploratory study](../experiments/README.md) covers two small domains and one follow-up change per implementation. Its value is finding concrete design differences and counterexamples. It cannot establish broad efficiency gains.
 
-The current refund example is an implementation demonstrator. It is too small, too familiar, and lacks a controlled baseline to establish the architecture hypothesis.
+## Next: improve discrimination
 
-## Then: external replication
+If competent agents succeed equally in both conditions, increase task diversity rather than manufacturing a weak baseline. Investigate:
 
-Recruit independent repositories and agent systems through reproducible contributions. Replicate with at least two different model families and more than one repository/language family before making cross-system claims. Refresh measurements after major model or harness changes.
+- multi-module workflows with configuration-selected behavior;
+- asynchronous state, duplicate delivery, cancellation, and recovery;
+- cross-cutting schema and protocol changes;
+- several successive modifications by fresh agents;
+- familiar versus unfamiliar framework conventions;
+- different task families that challenge the original design's assumptions.
 
-Test whether the profile pays for itself on existing large repositories, not only greenfield examples designed around it. Include the cost of preparing metadata and migrating architecture. Report which interventions fail and where they stop paying off.
+Freeze tasks and acceptance criteria before optimizing a principle. Separate ongoing instruction effects from properties of the generated code: neutral maintainers are useful for the latter question.
 
-## Product direction, conditional on evidence
+## Then: quantify transfer and economics
 
-If results support it, extract adapters for existing language servers, import graphs, build systems, contract-test suites, and CI receipts. Prefer interoperable small tools to a mandatory framework or central database. A framework that becomes the dominant context cost defeats the goal.
+Use multiple independently developed model families, repeated trials, and more repositories/languages. Collect provider usage where available. Measure correctness, cost including failures, maintenance effort, and retention across a change sequence. Follow the [evaluation protocol](../benchmarks/PROTOCOL.md).
 
-Only publish a conformance badge after defining a versioned, bounded check set and stating its limits. A passing structural validator must never imply proven agent productivity.
+Test principles individually and in combination. A useful mnemonic can contain a redundant or misleading rule; revise the rule when experiments expose it. Numerical targets are experimental preferences, not universal laws.
 
-## How this repository earns attention
+## Publication strategy
 
-The useful public promise is specific: a runnable example, a clear change contract, independently reproducible measurements, and honest comparisons. The README should make those discoverable in one visit.
+Lead with clear code-design guidance, concrete examples, and reproducible experiments. Keep historical versions and contrary results available. Invite counterexamples and alternative designs that perform better.
 
-Useful contributions include a failing task, a missing dependency class, an alternative architecture that wins, a replicated result, or a check bypass. Stars are an outcome of usefulness and distribution, not a technical claim or a promised result.
-
-Potential launch material after the pilot: a short problem/solution article, a narrated before-and-after task trace, and a results table with raw artifacts. Do not market illustrative byte/line counts as measured token savings or publish synthetic runs as model results.
+A short walkthrough showing a fresh agent modifying unfamiliar code can communicate the value when supported by real artifacts. Stars may follow useful guidance and honest demonstrations; they are not evidence of architectural quality or a promised result.

@@ -2,9 +2,11 @@
 
 **Evidence reviewed: 2026-10-05 · Status: critical research synthesis and experimental proposal**
 
-AGENT investigates a concrete engineering question: can software be organized so that autonomous coding agents complete correct changes with less discovery, inference, coordination, and verification cost, while remaining effective across future changes?
+AGENT investigates a concrete engineering question: can coding agents write decisions, dependencies, abstractions, state transitions, and effect boundaries that a fresh agent can implement and change correctly with less reconstruction?
 
-The evidence supports investigating that question. It does not establish the superiority of AGENT, the obsolescence of object-oriented programming, or a universal architecture for agents. This repository provides an [experimental specification](SPECIFICATION.md), explains its [relationship to prior art](docs/PRIOR-ART.md), and proposes a [controlled evaluation protocol](benchmarks/PROTOCOL.md). Its executable example demonstrates selected mechanisms; it is not a completed agent-performance experiment.
+The central property is **agent legibility**, a term used in [OpenAI's engineering account](https://openai.com/index/harness-engineering/). AGENT is proposed architectural guidance for producing that property in source code. Our [operational model](docs/LEGIBILITY.md) distinguishes evidence discovery, semantic reconstruction, impact prediction, and outcome verification; it is a proposed research model, not an established standard or a result from that engineering account.
+
+The evidence supports investigating that question. It does not establish the superiority of AGENT, the obsolescence of object-oriented programming, or a universal architecture for agents. This repository provides [experimental source-design principles](SPECIFICATION.md), a compact [coding guide](GUIDE.md), and their [relationship to prior art](docs/PRIOR-ART.md). The [exploratory coding study](experiments/README.md) completed four generation/maintenance chains: all passed the finite acceptance suites, with no acceptance advantage observed. Token use and agent duration were not measured. A controlled general advantage remains unproven. The [larger evaluation protocol](benchmarks/PROTOCOL.md) describes how to test broader claims.
 
 ## 1. Research method and limits
 
@@ -40,21 +42,21 @@ Numbers describe the cited experiments, not current leaderboards. Each row state
 
 ## 3. What the evidence changes about AGENT
 
-### Optimize a complete change episode
+### Design semantic decisions; evaluate complete work
 
-The relevant outcome is an accepted change, including discovery, implementation, regression verification, and handoff. A lower token bill obtained by skipping necessary checks is not an improvement. A shorter patch that postpones an inevitable migration can make the next change harder. Treat acceptance rate and total cost as separate outcomes and compare their tradeoff under equivalent constraints.
+The design object is a semantic responsibility: a decision, invariant, algorithm, or protocol, together with its inputs, owner, dependencies, and observable outcomes. The evaluation unit is complete work, including initial implementation, discovery during later changes, regression verification, and fresh-agent continuation. A lower token bill obtained by skipping necessary checks is not an improvement. A shorter patch that postpones an inevitable migration can make the next change harder. Treat acceptance rate and total cost as separate outcomes and compare their tradeoff under equivalent constraints.
 
 This framing is an engineering proposal informed by the evidence, rather than a result reported by one paper. It moves the concept from preferences about how code looks to questions an experiment can answer. “Can the agent independently modify this behavior?” and “What must it inspect or execute first?” are more actionable than whether a repository appears agent-friendly.
 
-### Replace atomicity with addressability
+### Keep a decision's meaning coherent
 
-The original **Atomic Context** name suggests a naturally complete small unit. Real changes may require an interface, a schema, a deployment binding, a downstream consumer, and several tests. **Addressable Context** instead requires a reliable route to the appropriate authorities, with expansion when the initial scope proves incomplete.
+**Atomic Context** means keeping the meaning of a decision understandable together. Its authoritative implementation or contract should expose relevant units, valid states, invariants, and failures. This is a source-design property, not a promise that every task fits in one file. A change may still require an interface, schema, deployment binding, downstream consumer, and several tests. Their relationships must be discoverable without duplicating the rule across those places.
 
 Long-context limitations [R5](https://arxiv.org/html/2502.05167v3) coexist with effective external navigation [R7](https://arxiv.org/html/2603.20432v1). The hypothesis should therefore concern the cost of acquiring sufficient evidence. It should not require the entire system to fit into one prompt. Tiny files, huge files, terse identifiers, and expansive prose can all obstruct that acquisition in different ways.
 
-### Make relationships queryable
+### Expose dependencies and effect paths in source
 
-The useful graph includes implementation selection, configuration, effects, schemas, callers, and tests. A dependency diagram that omits runtime wiring can be accurate about imports and misleading about behavior. Prefer generated or validated relationships over a second manually maintained description of the system.
+**Graph Explicitness** concerns the relationships expressed by calls, imports, types, constructor parameters, schemas, and composition. An agent should be able to recover implementation selection and meaningful effect order from those sources. A dependency diagram that omits runtime wiring can be accurate about imports and misleading about behavior. A generated view can assist exploration, but a separate graph service or manifest is not required.
 
 Graph retrieval's mixed neighborhood-size results [R4](https://arxiv.org/html/2410.14684v2) motivate selective traversal. The diverse retrieval tasks in [R11](https://arxiv.org/html/2607.24882v1) motivate broader relation types. Neither result proves that a particular graph schema improves architectural quality. Unknown dynamic edges must remain visible, with broader verification when needed.
 
@@ -66,15 +68,17 @@ An abstraction can reduce repeated reasoning by exposing a stable contract. It c
 
 ### Measure semantic change scope
 
-**Narrow Change Surface** concerns decisions and effects, not raw diff size. One-file changes can affect every customer; a broad mechanical migration can be appropriately bounded. An expected impact scope is a prediction to check, not a restriction that excuses missed consumers.
+**Narrow Change Surface** concerns ownership of state and invariants, not raw diff size. An operation should preserve the rules of the resource it owns instead of making callers coordinate low-level writes. Atomicity, idempotency, and conflict behavior must be real properties of that boundary where required. One-file changes can affect every customer; a broad mechanical migration can be appropriately bounded. An expected impact scope is a prediction to check, not a restriction that excuses missed consumers.
 
 Separate changed owners, affected contracts, generated artifacts, and operational migrations. Track both local and cross-cutting tasks. The metric lesson in [R15](https://arxiv.org/html/2606.13298v1) generalizes cautiously: always expose the numerator and denominator behind an appealing ratio. More code can improve a density score without removing a defect.
 
-### Extend executable rules into traceable verification
+### Make behavior executable and observable
 
-**Traceable Verification** extends the original Testable Architecture idea: connect the task, changed artifacts, affected contracts and effects, executed checks, and resulting evidence at a specific revision. A check must reject a known violation for the intended reason. Evidence must become invalid when the checked artifact changes.
+**Testable Behavior** asks the agent to express observable semantics through explicit inputs, outcomes, state transitions, and effect obligations. Supplying time or randomness at a meaningful boundary can make a policy reproducible. Separating a decision from unrelated persistence can expose its edge cases. Failures, retries, cancellation, and duplicate delivery need defined behavior when they matter; a passing happy path is insufficient.
 
-This is a proposed mechanism, not a demonstrated finding of the cited papers. Its purpose is to support agent-to-agent handoff without dependence on conversation memory. A verification receipt records observed results and limitations; it does not expose private reasoning or establish truth merely because it contains a hash. Acceptance requires authority independent of the implementation agent's ability to edit its own tests.
+These are proposed design choices, not demonstrated AGENT gains in the cited papers. Tests should challenge independently stated requirements and exercise real adapters when mocks would erase the relevant behavior. Selected fault injection can show that a check rejects a particular violation; it cannot establish completeness.
+
+Revision-bound reports and protected acceptance checks can support larger autonomous workflows. They are optional supporting implementation in the [verification profile](docs/VERIFICATION-PROFILE.md), not the principles' design object. A receipt records observations and limitations; it does not establish correctness by containing a hash. Applying AGENT requires no manifest, receipt format, or verification service.
 
 ## 4. Counterevidence and alternative explanations
 
@@ -86,21 +90,21 @@ Likewise, architectural erosion is not established merely because agent-written 
 
 Any apparent AGENT benefit could come from better tests, stronger task descriptions, a newer model, or a different harness. Source organization is only one variable. Interface effects in [R2](https://arxiv.org/html/2405.15793v3) and [R14](https://arxiv.org/html/2608.11386v1) make this confounding especially important. A useful experiment must isolate the proposed intervention before crediting the mnemonic.
 
-Finally, future models may navigate today's difficult structures cheaply. Additional manifests and indices can then become overhead. AGENT mechanisms should survive because they improve measured outcomes, not because agents are assumed permanently incapable of familiar engineering abstractions.
+Finally, future models may navigate today's difficult structures cheaply. Custom wrappers, extra layers, or optional indices can then become overhead. AGENT's design advice should survive because it improves measured outcomes, not because agents are assumed permanently incapable of familiar engineering abstractions.
 
 ## 5. Falsifiable claims and evaluation priorities
 
-The following are proposed hypotheses. Each needs a declared task population, model, harness, budget, acceptance mechanism, and repeated-run design. None is currently a demonstrated repository result.
+The following are proposed hypotheses. Each needs a declared task population, model, harness, budget, acceptance mechanism, and repeated-run design. The completed [exploratory study](experiments/README.md) found no acceptance-success difference on its small task set; it did not measure cost or isolate individual principles. No controlled general advantage is claimed.
 
 | Hypothesis | Observable outcome | Evidence against it |
 |---|---|---|
-| Addressable task routes improve evidence acquisition. | Fewer tokens or steps to sufficient relevant evidence, preserving acceptance. | The route adds overhead, misses constraints, or gives no repeatable benefit. |
-| Explicit, current relationships improve impact prediction. | Fewer missed consumers and undeclared effects under equivalent checks. | Graph upkeep exceeds savings, or dynamic gaps remain undetected. |
+| Cohesive semantic decisions reduce reconstruction. | Fresh agents recover rules and constraints with less reading, preserving correctness. | Extracted units obscure the rule, duplicate policy, or give no repeatable benefit. |
+| Explicit source dependencies and effect paths improve impact prediction. | Fewer missed consumers and hidden effects under equivalent checks. | Added wiring exceeds its benefit, or dynamic gaps remain undetected. |
 | A contract can lower abstraction costs. | Callers complete tasks with fewer internal inspections and lower lifecycle cost. | Callers repeatedly inspect internals; duplication, drift, or maintenance cost grows. |
-| Cohesive ownership improves local change behavior. | Fewer unrelated synchronized edits without missed migrations or regressions. | Benefits vanish on held-out or cross-cutting tasks. |
-| Revision-bound evidence improves independent handoff. | Fresh agents identify checked behavior and reject stale or weakened evidence. | Receipts become ceremonial, self-attested, or too expensive to maintain. |
+| Invariant-preserving ownership improves change behavior. | Fewer scattered state updates and regressions without missed migrations. | Owners become bottlenecks, required coordination is hidden, or benefits vanish on held-out tasks. |
+| Explicit inputs and effect obligations improve behavioral verification. | Agents exercise meaningful boundary and failure cases under independent acceptance tests. | Mocks conceal faults, tests restate an error, or extra boundaries add cost without improving outcomes. |
 
-The initial experiment should compare four conditions: original source with ordinary documentation; original source plus minimal agent guidance; behavior-preserving architectural changes with equivalent documentation information; and both interventions together. Hold the model, harness, tools, environment, task, oracle, and resource limits fixed. Randomize run order, repeat attempts, and report failures rather than selecting successful demonstrations.
+The exploratory study compares ordinary instructions with AGENT coding guidance, followed by fresh agents implementing withheld changes. This evaluates the combined guidance and the source designs it produces; it does not isolate every principle. Larger follow-up studies should distinguish four conditions: original source with ordinary documentation; original source plus minimal agent guidance; behavior-preserving architectural changes with equivalent documentation information; and both interventions together. Hold the model, harness, tools, environment, task, oracle, and resource limits fixed. Randomize run order, repeat attempts, and report failures rather than selecting successful demonstrations.
 
 Design refactors before revealing held-out future changes. Otherwise the experiment measures foreknowledge. Include sequential extension, fresh-agent handoff, cross-cutting migrations, and unfamiliar repositories across languages. Evolving-task work [R12](https://arxiv.org/html/2603.03823v4) and [R13](https://arxiv.org/html/2603.24755v2) supplies motivation for this temporal component; neither benchmark alone establishes the right test distribution for AGENT.
 
@@ -108,4 +112,4 @@ Report independently checked acceptance first, then total spending across assign
 
 Navigation diagnostics should include first relevant evidence, repeated retrieval, relevant-span yield, missed constraints, and predicted versus observed impact. File hits alone can hide substantial within-file work, as exploration research emphasizes. [R10](https://arxiv.org/html/2606.07297v1) Static metrics remain explanatory signals, not a substitute for task outcomes.
 
-Publish preregistered success margins, uncertainty intervals, repository-level breakdowns, excluded cases, model and harness versions, environment manifests, patches, and sanitized traces. Report negative results and amortization assumptions. If a mechanism helps only one task family or agent, preserve that narrower claim. The [benchmark protocol](benchmarks/PROTOCOL.md) defines how this repository intends to collect such evidence; until then, AGENT remains a testable proposal.
+Publish preregistered success margins, uncertainty intervals, repository-level breakdowns, excluded cases, model and harness versions, environment records, patches, and sanitized traces. Report negative results and amortization assumptions. If a design choice helps only one task family or agent, preserve that narrower claim. The [benchmark protocol](benchmarks/PROTOCOL.md) defines how to collect broader evidence; the [exploratory study](experiments/README.md) is an initial investigation. AGENT remains an experimental set of source-design principles.

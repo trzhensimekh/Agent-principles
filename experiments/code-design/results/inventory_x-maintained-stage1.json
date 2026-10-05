@@ -1,0 +1,20 @@
+{
+  "arm": "snapshots/maintained/inventory_x",
+  "captured_stderr": "",
+  "captured_stdout": "",
+  "domain": "inventory",
+  "duration_seconds": 0.008072,
+  "errors": [],
+  "evaluator_sha256": {
+    "runner.py": "9a9513eaf2755d05138222199fe2c7de46552e0573135025970730386b8e39d0",
+    "test_inventory.py": "dc13f381a22daf3a55d7cb027a682f53bc36c6a2d5dc3da372a08342c1b0de7e",
+    "test_pricing.py": "58533e5ca34666f8258845369ce8126211cc13efdc3130e5a117cff7836bc4f4"
+  },
+  "expected_failures": [],
+  "failures": [],
+  "skipped": [],
+  "stage": 1,
+  "successful": true,
+  "tests_run": 13,
+  "unexpected_successes": []
+}
