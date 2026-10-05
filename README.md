@@ -1,218 +1,97 @@
 # AGENT Principles
 
-**Software design principles for code maintained by autonomous coding agents.**
+**Architecture for code maintained by autonomous agents.**
 
-Version 0.1 · Proposal
+Make the next correct change easy to locate, bounded in scope, and backed by executable evidence.
 
-Coding agents can write code quickly. Maintaining it reliably requires a codebase in which they can find the right context, trace dependencies, make bounded changes, and verify the result.
+[Specification](SPECIFICATION.md) · [Run the example](examples/reference/README.md) · [Research](RESEARCH.md) · [Benchmark protocol](benchmarks/PROTOCOL.md) · [Prior art](docs/PRIOR-ART.md)
 
-AGENT proposes five design principles for that environment:
+**v0.2 · Experimental.** Runnable checks are included. A controlled improvement in agent success or token cost has **not yet been demonstrated**.
 
-| | Principle | Design goal |
+## The problem
+
+An agent can generate a plausible patch while missing the configuration that selects its implementation, the consumer that depends on its schema, or the test that would expose the mistake. A larger context window does not by itself make those relationships discoverable.
+
+AGENT treats the repository as a working interface for its autonomous maintainers. The optimization target is **the cost of an independently verified change**, including discovery, implementation, failed attempts, regression checks, and evidence handoff.
+
+## Five principles
+
+| | Principle | Agent-facing contract |
 |---|---|---|
-| **A** | **Atomic Context** | Understand a change locally. |
-| **G** | **Graph Explicitness** | Make dependencies obvious. |
-| **E** | **Economic Abstraction** | Abstractions must reduce context cost. |
-| **N** | **Narrow Change Surface** | Local changes stay local. |
-| **T** | **Testable Architecture** | Important rules are executable. |
+| **A** | **Addressable Context** | Find the task's owner, constraints, and checks through resolvable references. |
+| **G** | **Graph Explicitness** | Follow dependencies, configuration, data, and effects; expose unresolved edges. |
+| **E** | **Economic Abstraction** | Keep abstractions that lower total verified-change cost. |
+| **N** | **Narrow Change Surface** | Give decisions clear owners and account for their actual impact. |
+| **T** | **Traceable Verification** | Bind acceptance evidence to the requirement, changed artifacts, and tested version. |
 
-SOLID provides principles for object-oriented design. AGENT proposes a complementary lens: how much context, inference, coordination, and verification does a coding agent need to change a system correctly?
+These principles are language- and paradigm-independent. Functions, objects, modules, services, and typed effects can all implement useful boundaries. Their value depends on the tasks, model, harness, and verification environment.
 
-These principles also help human maintainers. Their emphasis is on the conditions required for increasingly autonomous maintenance.
+## The change contract
 
-## A — Atomic Context
-
-**Keep the information needed for a bounded change in a small, discoverable context.**
-
-A module should expose its purpose, contract, relevant invariants, and verification path. An agent should not have to reconstruct a business rule from unrelated files, undocumented conventions, or chat history.
-
-Atomic does not mean putting everything in one file. It means that the necessary context forms a coherent unit, with explicit links to supporting definitions and tests.
-
-**Bad — the rule and its units are hidden elsewhere:**
-
-```python
-def can_refund(order, now):
-    return order.state in ALLOWED and age(order, now) < LIMIT
+```mermaid
+flowchart LR
+    T[Task and acceptance criteria] --> C[Task context and owner]
+    C --> G[Dependencies, data, effects]
+    G --> P[Patch and impact record]
+    P --> V[Executable checks]
+    V --> R[Revision-bound evidence]
+    R --> A[Independent acceptance gate]
+    V -->|failure or unknown| C
 ```
 
-**Good — the relevant policy is visible:**
+A fresh agent should recover this path from durable artifacts. A subsequent agent should be able to verify the result without the previous agent's conversation. Decision records contain concise claims and evidence, not hidden reasoning transcripts.
 
-```python
-from datetime import timedelta
+A manifest is one possible implementation. Existing compiler indexes, build graphs, schema registries, and contract suites may already supply what is needed. Additional documentation must earn its maintenance and context cost.
 
-REFUND_WINDOW = timedelta(days=30)
-REFUNDABLE_STATES = {"paid", "shipped"}
+## Run a real example
 
-def can_refund(order, now):
-    """Refunds are allowed during the first 30 days after payment."""
-    return (
-        order.state in REFUNDABLE_STATES
-        and timedelta(0) <= now - order.paid_at < REFUND_WINDOW
-    )
+Python 3.11+; standard library only:
+
+```bash
+git clone https://github.com/trzhensimekh/Agent-principles.git
+cd Agent-principles/examples/reference
+python tools/context.py refund-window
+python verify.py --receipt /tmp/agent-verification.json
+python tools/negative_controls.py
 ```
 
-**Review test:** Given a representative change, can a maintainer identify the rule, its inputs, its boundary cases, and the tests from the owning module and its explicit references? Record any additional context required and why.
+The refund-request example provides explicit policy ownership, a ledger interface, inspectable composition, and a SQLite transaction that records a refund and an outbox event together. Its checks cover behavior, dependency boundaries, manifest references, and deliberately introduced violations.
 
-**Limit:** Keep shared domain definitions authoritative. Copying them into every module creates conflicting context.
+The receipt identifies checked files and outcomes. The example covers local refund-request persistence, not payment settlement or deployment. Its verifier is locally editable; it demonstrates evidence mechanics, not an independently secured acceptance service. See [the example's scope and commands](examples/reference/README.md) and [executed validation: 28 tests, seven negative controls](docs/VALIDATION.md).
 
-## G — Graph Explicitness
+## What is established—and what is proposed
 
-**Make dependencies and significant execution paths traceable.**
+| Status | Claim |
+|---|---|
+| Supported by published evidence | Navigation, tool interfaces, context selection, and iterative maintenance affect coding-agent outcomes. |
+| Direct prior art | Information hiding, contracts, Context Architecture, and the Context Minimization Principle underpin much of this proposal. |
+| Implemented here | A task contract, runnable reference, structural and behavioral checks, negative controls, and content-bound receipts. |
+| Open hypothesis | Applying AGENT improves correctness/cost tradeoffs on realistic maintenance tasks. |
 
-Dependencies should be visible through imports, constructor parameters, typed interfaces, or explicit composition. When runtime registration or dispatch is necessary, provide a discoverable mapping from declaration to implementation.
+The evidence is mixed in useful ways. A September 2026 revision of [Evaluating AGENTS.md](https://arxiv.org/abs/2602.11988v3) finds no general task-success improvement and higher inference costs in its evaluated settings. Adding agent instructions is therefore an intervention to test, not an automatic improvement. [Read the evidence review](RESEARCH.md).
 
-**Bad — a dependency is resolved through a global service locator:**
+## How to falsify it
 
-```java
-final class Checkout {
-    Receipt pay(Order order) {
-        return Services.resolve("payments").charge(order);
-    }
-}
-```
+Compare behavior-equivalent repository designs under the same tasks, model, harness, tools, budget, and acceptance oracle. Separate source architecture from documentation and tooling changes. Include cross-cutting changes and a sequence of future tasks. Count failures and metadata upkeep.
 
-**Good — the dependency is declared:**
+If a mechanism costs more without improving acceptance, delete it. If a benefit disappears with another model or harness, narrow the claim. If fewer tokens produce more missed regressions, the intervention failed.
 
-```java
-final class Checkout {
-    private final PaymentGateway payments;
+The [benchmark protocol](benchmarks/PROTOCOL.md) defines the experiment and reporting requirements. The current example is a demonstrator, not a benchmark result.
 
-    Checkout(PaymentGateway payments) {
-        this.payments = payments;
-    }
+## Where this fits
 
-    Receipt pay(Order order) {
-        return payments.charge(order);
-    }
-}
-```
+AGENT is an operational synthesis. It builds especially on [Sergio Azocar's Context Architecture](https://context-architecture.dev/) and [Lianghui Zhang's Context Minimization Principle](https://www.contextcost.dev/research/cmp/start/reliable-coding-agents-need-better-codebases/), as well as [OpenAI's harness engineering](https://openai.com/index/harness-engineering/) and established software-design research. The contribution to evaluate is the usable specification, evidence format, reference implementation, and reproducible evaluation—not priority over these ideas.
 
-**Review test:** Starting at an entry point, can a maintainer trace a representative operation to its external effects and identify the implementations selected in production? Any dynamic edge should have an explicit registration or configuration source.
+The v0.1 terms *Atomic Context* and *Testable Architecture* became *Addressable Context* and *Traceable Verification*. See [the specification](SPECIFICATION.md), [critical review](docs/CRITIQUE.md), and [prior-art comparison](docs/PRIOR-ART.md).
 
-**Limit:** Explicitness does not require eliminating polymorphism or plugins. It requires making their wiring inspectable.
+## Contribute evidence
 
-## E — Economic Abstraction
+Bring a task where the principles fail, a competing design that wins, a missed dependency, a checker bypass, or a replicated result. Useful negative results belong here.
 
-**Introduce an abstraction when it reduces the total context needed to use and change the system.**
-
-An abstraction earns its place by hiding stable complexity behind a clear contract. Count the concepts, configuration, indirection, and implementation details a maintainer must understand—not just the lines removed.
-
-**Bad — a generic framework must be understood to apply one policy:**
-
-```python
-def shipping_cost(order):
-    return PolicyEngine("shipping").evaluate(
-        ContextAdapter(order).to_context(),
-        strategy="threshold_v2",
-    )
-```
-
-**Good — a small function expresses the policy directly:**
-
-```python
-def shipping_cost_cents(subtotal_cents: int) -> int:
-    """Shipping is free for orders of $50 or more."""
-    return 0 if subtotal_cents >= 5_000 else 500
-```
-
-**Review test:** Compare representative tasks with and without the abstraction. Does its contract let callers work correctly without reading its internals? Does it reduce the concepts and files needed for those tasks? Keep it when the benefit outweighs its setup and navigation cost.
-
-**Limit:** A direct function is not always better. Shared infrastructure, security boundaries, and complex stable behavior often justify substantial abstractions.
-
-## N — Narrow Change Surface
-
-**A change to one concern should affect a bounded set of owning modules.**
-
-Organize code around cohesive responsibilities and stable boundaries. Avoid scattering one policy across controllers, persistence hooks, serializers, and UI components unless those layers genuinely own different parts of the behavior.
-
-**Bad — callers repeat the same policy:**
-
-```python
-# checkout.py
-shipping = 0 if subtotal_cents >= 5_000 else 500
-
-# quote.py
-shipping = 0 if subtotal_cents >= 5_000 else 500
-```
-
-**Good — callers use one authoritative policy:**
-
-```python
-# shipping.py
-def shipping_cost_cents(subtotal_cents: int) -> int:
-    return 0 if subtotal_cents >= 5_000 else 500
-
-# checkout.py and quote.py
-from shipping import shipping_cost_cents
-
-shipping = shipping_cost_cents(subtotal_cents)
-```
-
-**Review test:** Change a representative business rule. Do implementation edits remain within its owning boundary, with dependent tests or contracts updated where necessary? Explain edits outside that boundary; repeated unrelated edits indicate coupling.
-
-**Limit:** Cross-cutting changes and contract migrations may legitimately span modules. File count alone is not a quality metric.
-
-## T — Testable Architecture
-
-**Connect important architectural claims to executable checks that fail when those claims are violated.**
-
-Documentation explains a rule. A compiler, linter, architecture test, or CI check enforces it. Agents need observable feedback when a plausible change breaks a system constraint.
-
-**Bad — a dependency boundary exists only in prose:**
-
-```text
-Domain code must not depend on infrastructure code.
-```
-
-**Good — the same boundary is checked with ArchUnit:**
-
-```java
-import com.tngtech.archunit.junit.AnalyzeClasses;
-import com.tngtech.archunit.junit.ArchTest;
-import com.tngtech.archunit.lang.ArchRule;
-
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-
-@AnalyzeClasses(packages = "com.example")
-class ArchitectureTest {
-    @ArchTest
-    static final ArchRule domain_is_independent = noClasses()
-        .that().resideInAPackage("..domain..")
-        .should().dependOnClassesThat()
-        .resideInAPackage("..infrastructure..");
-}
-```
-
-**Verification test:** Deliberately introduce a violating dependency in a temporary change. Confirm that the check fails for the intended reason and that the required CI workflow runs it. Revert the violation.
-
-**Limit:** Checks enforce encoded properties. They do not prove that an architecture is appropriate or that every important constraint has been encoded.
-
-## Applying AGENT
-
-Use the principles during design and code review:
-
-1. Select a real maintenance task, such as changing a refund window or replacing a payment provider.
-2. Identify the context needed to understand it and the dependency paths involved.
-3. Check whether abstractions reduce that context and whether edits stay within the relevant boundaries.
-4. Run behavior and architecture checks. Confirm that important checks detect deliberate violations.
-5. Record recurring friction and improve the code structure where the evidence supports it.
-
-A, G, E, and N are review criteria supported by task-level evidence; they are not universal binary tests. T requires executable checks for the rules a project chooses to enforce. Teams can set measurable local budgets for context size or change spread, but this proposal does not prescribe arbitrary thresholds.
-
-The principles interact: centralizing a rule may narrow its change surface, while excessive indirection may make its context harder to find. Optimize for a maintainer's ability to make a correct, verifiable change across the whole task.
-
-## Origins and status
-
-AGENT is a proposed synthesis and mnemonic. Its underlying ideas build on established practices: cohesion, explicit dependencies, information hiding, change locality, and executable architectural constraints.
-
-The proposal is motivated by the growing need for codebases that coding agents can navigate and maintain autonomously. It does not claim that these underlying ideas are new or that this acronym has never been used elsewhere.
-
-Version 0.1 is open to revision through concrete examples and maintenance evidence. The code snippets illustrate design choices; they are not a complete application or a runnable example project.
+[Adoption guide](docs/ADOPTION.md) · [Research roadmap](docs/ROADMAP.md) · [Contribution guide](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 ## License
 
-Copyright © 2026 trzhensimekh.
+Copyright © 2026 trzhensimekh and contributors.
 
-The prose, tables, and other non-code content are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE). Code examples in this repository are licensed under the [MIT License](LICENSE-CODE).
-
-You may share, translate, and adapt the text, including commercially, subject to the CC BY 4.0 terms: give appropriate credit, link to the license, and indicate changes. When reusing code examples, retain the MIT copyright and permission notice.
+Prose and non-code content: [CC BY 4.0](LICENSE). Original source code, executable examples, and tooling: [MIT](LICENSE-CODE). Third-party works linked as references retain their own licenses.

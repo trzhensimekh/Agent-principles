@@ -1,0 +1,4 @@
+{"origin":"synthetic","repository":"fixture-only","task":"example-1","model":"test-model","repeat":0,"variant":"baseline","attempts":[{"success":false,"cost_usd":1.0},{"success":true,"cost_usd":2.0}]}
+{"origin":"synthetic","repository":"fixture-only","task":"example-1","model":"test-model","repeat":0,"variant":"agent","attempts":[{"success":true,"cost_usd":2.5}]}
+{"origin":"synthetic","repository":"fixture-only","task":"example-2","model":"test-model","repeat":0,"variant":"baseline","attempts":[{"success":true,"cost_usd":0.5}]}
+{"origin":"synthetic","repository":"fixture-only","task":"example-2","model":"test-model","repeat":0,"variant":"agent","attempts":[{"success":false,"cost_usd":1.5}]}

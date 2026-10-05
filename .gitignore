@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.sqlite
+*.sqlite3
+*.db
+verification-receipt.json
+artifacts/
+.DS_Store

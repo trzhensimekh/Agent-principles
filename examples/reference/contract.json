@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "system": "refund-request-ledger",
+  "scope": "A local immutable order ledger accepts full refund requests and writes an atomic outbox event. It does not settle payments.",
+  "tasks": {
+    "refund-window": {
+      "intent": "Change the eligibility window for a new full-refund request.",
+      "entrypoint": "refunds/service.py:request_refund",
+      "owner": "refunds/domain.py:approve",
+      "context": ["refunds/domain.py", "refunds/service.py", "refunds/ports.py", "tests/test_refunds.py"],
+      "change_scope": ["refunds/domain.py", "tests/test_refunds.py", "contract.json"],
+      "invariants": [
+        {"id": "window", "claim": "A new request is eligible for an elapsed duration in [0, 30 * 24 hours) after payment, using UTC instants.", "checks": ["tests.test_refunds.PolicyTests.test_window_boundaries", "tests.test_refunds.PolicyTests.test_elapsed_window_survives_offset_transition"]},
+        {"id": "states", "claim": "Only paid and shipped orders are eligible.", "checks": ["tests.test_refunds.PolicyTests.test_state_policy"]},
+        {"id": "clock", "claim": "Policy receives its clock explicitly; timestamps are timezone-aware.", "checks": ["tests.test_refunds.PolicyTests.test_timezone_aware_timestamps"]},
+        {"id": "replay", "claim": "A replay returns the original request even after the eligibility window expires.", "checks": ["tests.test_refunds.LedgerContractTests.test_replay_returns_original_after_window_closes"]},
+        {"id": "rejection-effects", "claim": "Rejected new requests create no request or outbox event.", "checks": ["tests.test_refunds.LedgerContractTests.test_ineligible_request_has_no_effect"]}
+      ],
+      "effects": ["ledger-read", "ledger-write"]
+    },
+    "storage-adapter": {
+      "intent": "Replace the durable ledger adapter while preserving its observable contract.",
+      "entrypoint": "refunds/service.py:request_refund",
+      "owner": "refunds/sqlite_ledger.py:SQLiteLedger",
+      "context": ["refunds/ports.py", "refunds/sqlite_ledger.py", "refunds/composition.py", "refunds/service.py", "refunds/domain.py", "tests/test_refunds.py", "tests/test_architecture.py"],
+      "change_scope": ["refunds/sqlite_ledger.py", "refunds/composition.py", "tests/test_refunds.py", "contract.json"],
+      "invariants": [
+        {"id": "durability", "claim": "A completed request and its outbox event are visible to a new connection.", "checks": ["tests.test_refunds.LedgerContractTests.test_request_and_event_are_persisted"]},
+        {"id": "atomicity", "claim": "An outbox insert failure rolls back the request write.", "checks": ["tests.test_refunds.LedgerContractTests.test_outbox_failure_rolls_back_request"]},
+        {"id": "idempotency", "claim": "Concurrent requests with the same key produce one request and one event.", "checks": ["tests.test_refunds.LedgerContractTests.test_concurrent_same_key_creates_one_event"]},
+        {"id": "single-refund", "claim": "Two different keys cannot request two full refunds for one order.", "checks": ["tests.test_refunds.LedgerContractTests.test_concurrent_different_keys_cannot_double_request"]},
+        {"id": "key-isolation", "claim": "Reusing an idempotency key for another order fails.", "checks": ["tests.test_refunds.LedgerContractTests.test_same_key_for_other_order_is_rejected", "tests.test_refunds.LedgerContractTests.test_adapter_rechecks_idempotency_inside_transaction"]},
+        {"id": "pure-domain", "claim": "Domain imports are limited to dataclasses and datetime.", "checks": ["tests.test_architecture.ArchitectureTests.test_declared_graph"]}
+      ],
+      "effects": ["ledger-read", "ledger-write"]
+    }
+  },
+  "effects": {
+    "ledger-read": {
+      "kind": "sqlite.read",
+      "implementation": "refunds/sqlite_ledger.py:SQLiteLedger.get_order",
+      "description": "Read the original order and existing idempotency records."
+    },
+    "ledger-write": {
+      "kind": "sqlite.transaction",
+      "implementation": "refunds/sqlite_ledger.py:SQLiteLedger.record",
+      "description": "Atomically record a full refund request and its refund.requested outbox event. No network or money-transfer effect occurs."
+    }
+  },
+  "bindings": [
+    {"port": "refunds/ports.py:RefundLedger", "implementation": "refunds/sqlite_ledger.py:SQLiteLedger", "composition": "refunds/composition.py:open_ledger"}
+  ],
+  "allowed_imports": {
+    "refunds": [],
+    "refunds.domain": ["dataclasses", "datetime"],
+    "refunds.ports": ["typing", "refunds.domain"],
+    "refunds.service": ["datetime", "refunds.domain", "refunds.ports"],
+    "refunds.sqlite_ledger": ["json", "sqlite3", "datetime", "pathlib", "refunds.domain"],
+    "refunds.composition": ["pathlib", "refunds.sqlite_ledger"]
+  }
+}

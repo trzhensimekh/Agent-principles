@@ -1,0 +1,35 @@
+name: Verify reference and research tooling
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Check documentation links
+        run: python tools/check_docs.py
+      - name: Verify reference and receipt freshness
+        working-directory: examples/reference
+        run: |
+          python verify.py --receipt "$RUNNER_TEMP/agent-receipt.json"
+          python verify.py --check-receipt "$RUNNER_TEMP/agent-receipt.json"
+      - name: Reject deliberately introduced faults
+        working-directory: examples/reference
+        run: python tools/negative_controls.py
+      - name: Check benchmark measurement tooling
+        run: python -m unittest discover -s benchmarks/tests -v
